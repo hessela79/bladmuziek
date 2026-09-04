@@ -142,7 +142,16 @@ ${pagesHtml}
     var back5Btn = document.getElementById("player-back5");
     var fwd5Btn = document.getElementById("player-fwd5");
     var rateButtons = Array.prototype.slice.call(document.querySelectorAll(".rate-btn"));
-    var buttons = Array.prototype.slice.call(document.querySelectorAll(".passage-button"));
+    var buttonEls = Array.prototype.slice.call(document.querySelectorAll(".passage-button"));
+    // De knoppen staan in de DOM per pagina gegroepeerd, niet per se in
+    // dezelfde volgorde als PASSAGES (die de algemene sort_order volgt).
+    // Elke knop kent daarom zijn eigen PASSAGES-index via data-index —
+    // dat is de betrouwbare koppeling, niet de positie in de NodeList.
+    var buttons = new Array(PASSAGES.length);
+    buttonEls.forEach(function (btn) {
+      var idx = parseInt(btn.dataset.index, 10);
+      buttons[idx] = btn;
+    });
     var currentAudio = null;
     var currentIndex = -1;
     var currentRate = 1;
@@ -224,8 +233,9 @@ ${pagesHtml}
       });
     }
 
-    buttons.forEach(function (btn, index) {
-      btn.addEventListener("click", function () { togglePassage(index); });
+    buttonEls.forEach(function (btn) {
+      var idx = parseInt(btn.dataset.index, 10);
+      btn.addEventListener("click", function () { togglePassage(idx); });
     });
     playerClose.addEventListener("click", closeBar);
     playPauseBtn.addEventListener("click", function () {
