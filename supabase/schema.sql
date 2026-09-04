@@ -44,6 +44,7 @@ create table if not exists passages (
   title text not null,
   description text,
   audio_asset_id uuid references assets (id) on delete set null,
+  color text not null default 'goud' check (color in ('geel', 'groen', 'rood', 'blauw', 'bruin', 'goud')),
   page int not null,
   x_pct numeric not null,
   y_pct numeric not null,

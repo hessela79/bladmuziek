@@ -50,6 +50,22 @@ const pfAudioUpload = document.getElementById("pf-audio-upload");
 const pfDelete = document.getElementById("pf-delete");
 const pfCancel = document.getElementById("pf-cancel");
 const pfSave = document.getElementById("pf-save");
+const pfColorSwatches = Array.from(document.querySelectorAll("#pf-color-swatches .color-swatch"));
+
+const PASSAGE_COLORS = ["geel", "groen", "rood", "blauw", "bruin", "goud"];
+const DEFAULT_PASSAGE_COLOR = "goud";
+let selectedColor = DEFAULT_PASSAGE_COLOR;
+
+function setSelectedColor(color) {
+  selectedColor = PASSAGE_COLORS.includes(color) ? color : DEFAULT_PASSAGE_COLOR;
+  for (const swatch of pfColorSwatches) {
+    swatch.classList.toggle("selected", swatch.dataset.color === selectedColor);
+  }
+}
+
+for (const swatch of pfColorSwatches) {
+  swatch.addEventListener("click", () => setSelectedColor(swatch.dataset.color));
+}
 
 // ---------- State ----------
 
@@ -64,7 +80,7 @@ const state = {
   currentPage: 1,
   pdfAssetId: null,
   pdfFile: null,
-  passages: [], // {_key, id, title, description, audioAssetId, audioFile, page, xPct, yPct, widthPct, heightPct, sortOrder, deleted}
+  passages: [], // {_key, id, title, description, audioAssetId, audioFile, color, page, xPct, yPct, widthPct, heightPct, sortOrder, deleted}
 };
 
 let drawModeOn = false;
@@ -384,6 +400,7 @@ async function openEditor(piece) {
       description: p.description,
       audioAssetId: p.audio_asset_id,
       audioFile: null,
+      color: p.color || DEFAULT_PASSAGE_COLOR,
       page: p.page,
       xPct: Number(p.x_pct),
       yPct: Number(p.y_pct),
@@ -475,7 +492,8 @@ function renderMarkersOnOverlay(overlay) {
     if (passage.deleted || passage.page !== state.currentPage) continue;
     const hasAudio = !!(passage.audioAssetId || passage.audioFile);
     const marker = document.createElement("div");
-    marker.className = "editor-passage-marker" + (hasAudio ? "" : " note-only");
+    const color = passage.color || DEFAULT_PASSAGE_COLOR;
+    marker.className = "editor-passage-marker color-" + color + (hasAudio ? "" : " note-only");
     marker.style.left = `${passage.xPct * 100}%`;
     marker.style.top = `${passage.yPct * 100}%`;
     marker.style.width = `${passage.widthPct * 100}%`;
@@ -620,6 +638,7 @@ function openPassageModal(key) {
     pfAudioUpload.value = "";
     pfNoAudio.checked = !passage.audioAssetId && !passage.audioFile;
     pfDelete.hidden = false;
+    setSelectedColor(passage.color || DEFAULT_PASSAGE_COLOR);
   } else {
     passageModalTitle.textContent = "Nieuwe passage";
     pfTitle.value = "";
@@ -628,6 +647,7 @@ function openPassageModal(key) {
     pfAudioUpload.value = "";
     pfNoAudio.checked = false;
     pfDelete.hidden = true;
+    setSelectedColor(DEFAULT_PASSAGE_COLOR);
   }
   updateNoAudioFieldState();
   passageModal.hidden = false;
@@ -654,6 +674,7 @@ pfSave.addEventListener("click", async () => {
     const passage = state.passages.find((p) => p._key === activePassageKey);
     passage.title = title;
     passage.description = pfDescription.value.trim();
+    passage.color = selectedColor;
     if (pfNoAudio.checked) {
       passage.audioFile = null;
       passage.audioAssetId = null;
@@ -672,6 +693,7 @@ pfSave.addEventListener("click", async () => {
       description: pfDescription.value.trim(),
       audioAssetId: audioFile ? null : audioAssetId,
       audioFile,
+      color: selectedColor,
       page: pendingRect.page,
       xPct: pendingRect.xPct,
       yPct: pendingRect.yPct,
@@ -710,11 +732,12 @@ function renderPassageList() {
   passageListEl.innerHTML = "";
   for (const passage of visible) {
     const hasAudio = !!(passage.audioAssetId || passage.audioFile);
+    const color = passage.color || DEFAULT_PASSAGE_COLOR;
     const row = document.createElement("div");
     row.className = "passage-row";
     row.innerHTML = `
       <div>
-        <div class="passage-row-title">${passage.title}${hasAudio ? "" : ' <span class="passage-row-note-badge">alleen opmerking</span>'}</div>
+        <div class="passage-row-title"><span class="color-swatch color-${color} passage-row-dot"></span>${passage.title}${hasAudio ? "" : ' <span class="passage-row-note-badge">alleen opmerking</span>'}</div>
         <div class="passage-row-meta">Pagina ${passage.page} · ${passage.description || ""}</div>
       </div>
       <button class="btn btn-secondary btn-small">Bewerken</button>
@@ -831,6 +854,7 @@ saveBtn.addEventListener("click", async () => {
         title: passage.title,
         description: passage.description,
         audio_asset_id: audioAssetId,
+        color: passage.color || DEFAULT_PASSAGE_COLOR,
         page: passage.page,
         x_pct: passage.xPct,
         y_pct: passage.yPct,

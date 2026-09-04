@@ -184,7 +184,7 @@ function buildPageWrapper(pageNumber) {
 function addPassageButton(overlay, passage, index) {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "passage-button" + (passage.hasAudio ? "" : " note-only");
+  button.className = "passage-button color-" + (passage.color || "goud") + (passage.hasAudio ? "" : " note-only");
   button.style.left = `${passage.x_pct * 100}%`;
   button.style.top = `${passage.y_pct * 100}%`;
   button.style.width = `${passage.width_pct * 100}%`;

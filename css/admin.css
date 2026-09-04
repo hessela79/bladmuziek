@@ -309,7 +309,7 @@
 }
 
 .editor-passage-marker:hover {
-  background: var(--overlay-playing);
+  filter: brightness(1.1);
 }
 
 .editor-passage-marker .marker-badge {
@@ -321,12 +321,52 @@
   padding: 2px 6px;
 }
 
-.editor-passage-marker.note-only {
-  border-color: var(--ink-muted);
-}
-
 .editor-passage-marker.note-only .marker-badge {
   background: var(--ink-muted);
+}
+
+.editor-passage-marker.color-geel { border-color: var(--color-geel); background: var(--color-geel-bg); }
+.editor-passage-marker.color-groen { border-color: var(--color-groen); background: var(--color-groen-bg); }
+.editor-passage-marker.color-rood { border-color: var(--color-rood); background: var(--color-rood-bg); }
+.editor-passage-marker.color-blauw { border-color: var(--color-blauw); background: var(--color-blauw-bg); }
+.editor-passage-marker.color-bruin { border-color: var(--color-bruin); background: var(--color-bruin-bg); }
+.editor-passage-marker.color-goud { border-color: var(--gold); background: var(--overlay); }
+
+.color-swatches {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.color-swatch.selected {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--paper);
+}
+
+.color-swatch.color-geel { background: var(--color-geel); }
+.color-swatch.color-groen { background: var(--color-groen); }
+.color-swatch.color-rood { background: var(--color-rood); }
+.color-swatch.color-blauw { background: var(--color-blauw); }
+.color-swatch.color-bruin { background: var(--color-bruin); }
+.color-swatch.color-goud { background: var(--gold); }
+
+.passage-row-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: none;
+  margin-right: 6px;
+  vertical-align: middle;
+  cursor: default;
 }
 
 .passage-row-note-badge {

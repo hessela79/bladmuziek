@@ -45,7 +45,7 @@ function buildDocument(piece, pages, passages) {
           .filter((p) => p.page === pageIndex + 1)
           .map(
             (p) => `
-        <button type="button" class="passage-button${p.hasAudio ? "" : " note-only"}" data-index="${p.exportIndex}"
+        <button type="button" class="passage-button color-${p.color || "goud"}${p.hasAudio ? "" : " note-only"}" data-index="${p.exportIndex}"
           style="left:${p.x_pct * 100}%;top:${p.y_pct * 100}%;width:${p.width_pct * 100}%;height:${p.height_pct * 100}%;">
           <span class="play-icon">${p.hasAudio ? PLAY_ICON_SVG : NOTE_ICON_SVG}</span>
         </button>`
@@ -259,6 +259,11 @@ const EXPORT_CSS = `
     --ink: #2b2013; --ink-muted: #7a6650; --gold: #b9822f;
     --line: rgba(43,32,19,0.18); --overlay: rgba(185,130,47,0.16);
     --overlay-playing: rgba(185,130,47,0.34);
+    --color-geel: #c9a227; --color-geel-bg: rgba(201,162,39,0.16); --color-geel-bg-active: rgba(201,162,39,0.34);
+    --color-groen: #4f7a3d; --color-groen-bg: rgba(79,122,61,0.16); --color-groen-bg-active: rgba(79,122,61,0.34);
+    --color-rood: #b23a2e; --color-rood-bg: rgba(178,58,46,0.16); --color-rood-bg-active: rgba(178,58,46,0.34);
+    --color-blauw: #3f6a96; --color-blauw-bg: rgba(63,106,150,0.16); --color-blauw-bg-active: rgba(63,106,150,0.34);
+    --color-bruin: #6b4a30; --color-bruin-bg: rgba(107,74,48,0.16); --color-bruin-bg-active: rgba(107,74,48,0.34);
   }
   * { box-sizing: border-box; }
   body {
@@ -280,11 +285,24 @@ const EXPORT_CSS = `
   }
   .page-overlay { position: absolute; inset: 0; }
   .passage-button {
-    position: absolute; background: var(--overlay); border: 1.5px solid transparent;
+    position: absolute; background: var(--overlay); border: 1.5px solid var(--gold);
     border-radius: 8px; cursor: pointer; display: flex; align-items: flex-start;
-    justify-content: flex-end; padding: 6px;
+    justify-content: flex-end; padding: 6px; transition: background 0.15s ease, filter 0.15s ease;
   }
-  .passage-button.playing { background: var(--overlay-playing); border-color: var(--gold); }
+  .passage-button:hover, .passage-button:focus-visible { filter: brightness(1.1); outline: none; }
+  .passage-button.playing { background: var(--overlay-playing); }
+  .passage-button.color-geel { border-color: var(--color-geel); background: var(--color-geel-bg); }
+  .passage-button.color-geel.playing { background: var(--color-geel-bg-active); }
+  .passage-button.color-groen { border-color: var(--color-groen); background: var(--color-groen-bg); }
+  .passage-button.color-groen.playing { background: var(--color-groen-bg-active); }
+  .passage-button.color-rood { border-color: var(--color-rood); background: var(--color-rood-bg); }
+  .passage-button.color-rood.playing { background: var(--color-rood-bg-active); }
+  .passage-button.color-blauw { border-color: var(--color-blauw); background: var(--color-blauw-bg); }
+  .passage-button.color-blauw.playing { background: var(--color-blauw-bg-active); }
+  .passage-button.color-bruin { border-color: var(--color-bruin); background: var(--color-bruin-bg); }
+  .passage-button.color-bruin.playing { background: var(--color-bruin-bg-active); }
+  .passage-button.color-goud { border-color: var(--gold); background: var(--overlay); }
+  .passage-button.color-goud.playing { background: var(--overlay-playing); }
   .play-icon {
     width: 28px; height: 28px; border-radius: 50%; background: var(--gold);
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -376,6 +394,7 @@ export async function exportStandaloneHtml(piece, allPassages, pdfContainer) {
     passages.push({
       title: p.title,
       description: p.description,
+      color: p.color,
       page: p.page,
       x_pct: p.x_pct,
       y_pct: p.y_pct,
