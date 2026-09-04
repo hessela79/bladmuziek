@@ -160,47 +160,77 @@ async function deletePiece(piece) {
 
 let libraryVisible = false;
 
-async function renderAssetLibrary() {
-  const { data: allPieces } = await supabase.from("pieces").select("id, pdf_asset_id");
-  const { data: allPassages } = await supabase.from("passages").select("id, audio_asset_id");
-
-  const pdfUseCount = new Map();
-  for (const p of allPieces || []) {
-    if (p.pdf_asset_id) pdfUseCount.set(p.pdf_asset_id, (pdfUseCount.get(p.pdf_asset_id) || 0) + 1);
-  }
-  const audioUseCount = new Map();
-  for (const p of allPassages || []) {
-    if (p.audio_asset_id) audioUseCount.set(p.audio_asset_id, (audioUseCount.get(p.audio_asset_id) || 0) + 1);
-  }
-
-  const allAssets = [...pdfAssets, ...audioAssets];
-  if (allAssets.length === 0) {
-    assetLibraryEl.innerHTML = `<p class="status">Nog geen bestanden in de bibliotheek.</p>`;
-    return;
-  }
-
-  assetLibraryEl.innerHTML = "";
-  for (const asset of allAssets) {
-    const useCount = asset.type === "pdf" ? pdfUseCount.get(asset.id) || 0 : audioUseCount.get(asset.id) || 0;
-    const row = document.createElement("div");
-    row.className = "asset-row";
-    row.innerHTML = `
+function assetRowHtml(asset, useLabel) {
+  return `
+    <div class="asset-row">
       <div>
         <strong>${asset.filename}</strong>
-        <div class="asset-row-meta">${asset.type === "pdf" ? "PDF" : "mp3"} · gebruikt in ${useCount} stuk(ken)</div>
+        <div class="asset-row-meta">${asset.type === "pdf" ? "PDF" : "mp3"}${useLabel ? " · " + useLabel : ""}</div>
       </div>
-      <button class="btn btn-danger btn-small">Verwijderen</button>
-    `;
-    row.querySelector("button").addEventListener("click", () => deleteAsset(asset, useCount));
-    assetLibraryEl.appendChild(row);
-  }
+      <button class="btn btn-danger btn-small" data-asset-id="${asset.id}">Verwijderen</button>
+    </div>
+  `;
 }
 
-async function deleteAsset(asset, useCount) {
-  const warning =
-    useCount > 0
-      ? `Dit bestand wordt gebruikt in ${useCount} stuk(ken)/passage(s). Verwijderen maakt die referentie(s) leeg. Doorgaan?`
-      : `"${asset.filename}" verwijderen?`;
+function folderHtml(name, innerHtml, openByDefault) {
+  return `
+    <details class="asset-folder"${openByDefault ? " open" : ""}>
+      <summary>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+        ${name}
+      </summary>
+      <div class="asset-folder-body">${innerHtml}</div>
+    </details>
+  `;
+}
+
+async function renderAssetLibrary() {
+  const { data: allPieces } = await supabase.from("pieces").select("id, title, pdf_asset_id");
+  const { data: allPassages } = await supabase.from("passages").select("id, piece_id, audio_asset_id");
+
+  const assetsById = new Map([...pdfAssets, ...audioAssets].map((a) => [a.id, a]));
+  const usedAssetIds = new Set();
+  let html = "";
+
+  for (const piece of allPieces || []) {
+    const files = [];
+    if (piece.pdf_asset_id && assetsById.has(piece.pdf_asset_id)) {
+      usedAssetIds.add(piece.pdf_asset_id);
+      files.push(assetRowHtml(assetsById.get(piece.pdf_asset_id), "bladmuziek"));
+    }
+    for (const passage of (allPassages || []).filter((p) => p.piece_id === piece.id)) {
+      if (passage.audio_asset_id && assetsById.has(passage.audio_asset_id)) {
+        usedAssetIds.add(passage.audio_asset_id);
+        files.push(assetRowHtml(assetsById.get(passage.audio_asset_id), "oefenfragment"));
+      }
+    }
+    html += folderHtml(
+      piece.title,
+      files.length ? files.join("") : `<p class="status">Geen bestanden.</p>`,
+      false
+    );
+  }
+
+  const unused = [...assetsById.values()].filter((a) => !usedAssetIds.has(a.id));
+  if (unused.length > 0) {
+    html += folderHtml(
+      "Ongebruikt",
+      unused.map((a) => assetRowHtml(a, "niet gekoppeld aan een stuk")).join(""),
+      true
+    );
+  }
+
+  assetLibraryEl.innerHTML = html || `<p class="status">Nog geen bestanden in de bibliotheek.</p>`;
+  assetLibraryEl.querySelectorAll("button[data-asset-id]").forEach((btn) => {
+    const asset = assetsById.get(btn.dataset.assetId);
+    btn.addEventListener("click", () => deleteAsset(asset, usedAssetIds.has(asset.id)));
+  });
+}
+
+async function deleteAsset(asset, isUsed) {
+  const warning = isUsed
+    ? `"${asset.filename}" wordt nog gebruikt door een stuk of passage. Verwijderen maakt die koppeling leeg. Doorgaan?`
+    : `"${asset.filename}" verwijderen?`;
   if (!confirm(warning)) return;
 
   const bucket = asset.type === "pdf" ? PDF_BUCKET : AUDIO_BUCKET;
@@ -406,6 +436,7 @@ addPassageBtn.addEventListener("click", () => {
   drawModeOn = !drawModeOn;
   addPassageBtn.textContent = drawModeOn ? "Annuleer tekenen" : "+ Passage tekenen";
   drawHint.hidden = !drawModeOn;
+  pdfContainer.classList.toggle("draw-mode", drawModeOn);
 });
 
 function attachDrawHandlers(overlay) {
@@ -441,15 +472,22 @@ function attachDrawHandlers(overlay) {
     const rect = overlay.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const left = Math.min(x, dragStart.x);
-    const top = Math.min(y, dragStart.y);
-    const w = Math.abs(x - dragStart.x);
-    const h = Math.abs(y - dragStart.y);
+    let left = Math.min(x, dragStart.x);
+    let top = Math.min(y, dragStart.y);
+    let w = Math.abs(x - dragStart.x);
+    let h = Math.abs(y - dragStart.y);
     dragEl.remove();
     dragStart = null;
     dragEl = null;
 
-    if (w < 12 || h < 8) return; // te klein, negeren
+    // Een gewone klik (nauwelijks gesleept) telt ook: geef een standaard
+    // rechthoekje rond het klikpunt, zodat "even klikken" ook werkt.
+    if (w < 12 || h < 8) {
+      w = Math.min(160, rect.width * 0.25);
+      h = Math.min(70, rect.height * 0.3);
+      left = Math.max(0, Math.min(x - w / 2, rect.width - w));
+      top = Math.max(0, Math.min(y - h / 2, rect.height - h));
+    }
 
     pendingRect = {
       page: state.currentPage,
@@ -631,7 +669,7 @@ saveBtn.addEventListener("click", async () => {
     let pdfAssetId = state.pdfAssetId;
     if (state.pdfFile) {
       editorStatus.textContent = "PDF uploaden…";
-      const asset = await uploadAsset(PDF_BUCKET, `${pieceId}.pdf`, state.pdfFile);
+      const asset = await uploadAsset(PDF_BUCKET, `${pieceId}/${state.pdfFile.name}`, state.pdfFile);
       pdfAssetId = asset.id;
     }
 

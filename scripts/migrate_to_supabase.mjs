@@ -64,7 +64,7 @@ async function migratePiece(piece) {
 
   // PDF
   const pdfLocalPath = path.join(ROOT, piece.pdf);
-  const pdfStoragePath = `${piece.id}.pdf`;
+  const pdfStoragePath = `${piece.id}/${path.basename(pdfLocalPath)}`;
   const pdfSize = await uploadFile("pdfs", pdfStoragePath, pdfLocalPath, "application/pdf");
   const pdfAsset = await insertRow("assets", {
     type: "pdf",

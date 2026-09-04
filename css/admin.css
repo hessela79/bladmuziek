@@ -115,6 +115,40 @@
   font-size: 0.78rem;
 }
 
+.asset-folder {
+  background: var(--paper);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.asset-folder summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  list-style: none;
+  color: var(--gold);
+}
+
+.asset-folder summary::-webkit-details-marker {
+  display: none;
+}
+
+.asset-folder-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 12px 12px;
+}
+
+.asset-folder-body .asset-row {
+  background: var(--parchment);
+}
+
 /* ---------- Editor ---------- */
 
 .editor-grid {
@@ -191,6 +225,11 @@
 
 .editor-pdf .page-wrapper {
   cursor: crosshair;
+}
+
+.pdf-container.draw-mode .page-wrapper {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
 }
 
 .pdf-nav {
