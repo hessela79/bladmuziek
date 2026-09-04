@@ -1,9 +1,11 @@
 // Bouwt één op zichzelf staand HTML-bestand voor een stuk: de bladmuziek
 // als afbeeldingen + de oefenfragmenten, allemaal ingebed (base64), zodat
 // het bestand ook zonder internet werkt — handig om bijvoorbeeld op
-// Google Drive te zetten en van daaruit te openen. De afspeelbalk heeft
-// dezelfde bediening als de live viewer: vorige/volgende passage, 5 sec
-// terug/vooruit, play/pause en afspeelsnelheid.
+// Google Drive te bewaren. Let op: Drive's eigen voorbeeldweergave voert
+// geen HTML/JS uit en toont dus alleen de broncode — het bestand moet
+// eerst gedownload en daarna lokaal met een browser geopend worden. De
+// afspeelbalk heeft dezelfde bediening als de live viewer: vorige/volgende
+// passage, 5 sec terug/vooruit, play/pause en afspeelsnelheid.
 
 function slugify(text) {
   return text
@@ -81,7 +83,7 @@ ${EXPORT_CSS}
   <header class="header">
     <div class="title">${escapeHtml(piece.title)}</div>
     <div class="subtitle">${escapeHtml(subtitle)}</div>
-    <p class="hint">Geëxporteerd uit Notenmap — werkt offline, ook rechtstreeks vanaf Google Drive of een andere schijf.</p>
+    <p class="hint">Geëxporteerd uit Notenmap — werkt offline. Sta je dit bestand bijv. op Google Drive? Download het dan eerst naar je apparaat en open die download met een browser — de voorbeeldweergave van Drive zelf toont alleen de broncode.</p>
   </header>
   <main class="pdf-container">
 ${pagesHtml}
