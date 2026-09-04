@@ -322,6 +322,10 @@ button {
   flex-wrap: wrap;
 }
 
+.btn-export[hidden] {
+  display: none;
+}
+
 .btn-export {
   flex-shrink: 0;
   display: inline-flex;
