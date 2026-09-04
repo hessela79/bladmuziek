@@ -5,15 +5,21 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).href;
 
-const PDF_URL = "assets/pdf/voorbeeld-bladmuziek.pdf";
-const PASSAGES_URL = "data/passages.json";
+const PIECES_URL = "data/pieces.json";
+
+const VOICE_LABELS = { S: "S", A: "A", T: "T", B: "B" };
 
 const container = document.getElementById("pdf-container");
 const statusEl = document.getElementById("status");
+const titleEl = document.getElementById("viewer-title");
+const subtitleEl = document.getElementById("viewer-subtitle");
 const playerBar = document.getElementById("player-bar");
 const playerTitle = document.getElementById("player-title");
 const playerDesc = document.getElementById("player-desc");
 const playerStop = document.getElementById("player-stop");
+
+const PLAY_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#fffdf8"><path d="M8 5v14l11-7z"/></svg>';
+const STOP_ICON = '<svg width="10" height="10" viewBox="0 0 24 24" fill="#fffdf8"><rect x="5" y="5" width="14" height="14" rx="1.5"/></svg>';
 
 let currentAudio = null;
 let currentButton = null;
@@ -25,6 +31,7 @@ function stopPlayback() {
   }
   if (currentButton) {
     currentButton.classList.remove("playing");
+    currentButton.querySelector(".play-icon").innerHTML = PLAY_ICON;
   }
   currentAudio = null;
   currentButton = null;
@@ -32,7 +39,6 @@ function stopPlayback() {
 }
 
 function playPassage(passage, button) {
-  // Nogmaals klikken op dezelfde passage stopt het afspelen.
   if (currentButton === button) {
     stopPlayback();
     return;
@@ -50,6 +56,7 @@ function playPassage(passage, button) {
   currentAudio = audio;
   currentButton = button;
   button.classList.add("playing");
+  button.querySelector(".play-icon").innerHTML = STOP_ICON;
 
   playerTitle.textContent = passage.title;
   playerDesc.textContent = passage.description || "";
@@ -90,7 +97,7 @@ function addPassageButton(overlay, passage) {
   button.style.height = `${passage.heightPct * 100}%`;
   button.setAttribute("aria-label", `Afspelen: ${passage.title}`);
   button.title = passage.title;
-  button.innerHTML = '<span class="play-icon" aria-hidden="true">▶</span>';
+  button.innerHTML = `<span class="play-icon">${PLAY_ICON}</span>`;
 
   button.addEventListener("click", () => playPassage(passage, button));
   overlay.appendChild(button);
@@ -99,8 +106,7 @@ function addPassageButton(overlay, passage) {
 async function renderPage(pdf, pageNumber, passagesByPage) {
   const page = await pdf.getPage(pageNumber);
 
-  // Schaal zodat de pagina de beschikbare breedte vult, met een cap voor scherpte op mobiel.
-  const targetWidth = Math.min(container.clientWidth || 900, 1100);
+  const targetWidth = Math.min(container.clientWidth || 900, 1000);
   const unscaledViewport = page.getViewport({ scale: 1 });
   const scale = targetWidth / unscaledViewport.width;
   const viewport = page.getViewport({ scale });
@@ -128,10 +134,30 @@ async function renderPage(pdf, pageNumber, passagesByPage) {
 }
 
 async function main() {
+  const params = new URLSearchParams(window.location.search);
+  const pieceId = params.get("stuk");
+
+  if (!pieceId) {
+    statusEl.textContent = "Geen stuk gekozen — ga terug naar het overzicht.";
+    return;
+  }
+
   try {
+    const pieces = await fetch(PIECES_URL).then((r) => r.json());
+    const piece = pieces.find((p) => p.id === pieceId);
+
+    if (!piece) {
+      statusEl.textContent = "Dit stuk is niet gevonden.";
+      return;
+    }
+
+    document.title = `${piece.title} — Notenmap`;
+    titleEl.textContent = piece.title;
+    subtitleEl.textContent = `${piece.composer} · ${piece.voices.map((v) => VOICE_LABELS[v] || v).join("")}${piece.solo ? " + solo" : ""}`;
+
     const [pdf, passages] = await Promise.all([
-      pdfjsLib.getDocument(PDF_URL).promise,
-      fetch(PASSAGES_URL).then((r) => r.json()),
+      pdfjsLib.getDocument(piece.pdf).promise,
+      fetch(piece.passagesData).then((r) => r.json()),
     ]);
 
     const passagesByPage = new Map();

@@ -1,0 +1,98 @@
+[
+  {
+    "id": "ave-verum",
+    "title": "Ave Verum Corpus",
+    "composer": "arr. Marieke Hendriks",
+    "genre": "Klassiek · Latijn",
+    "voices": [
+      "S",
+      "A",
+      "T",
+      "B"
+    ],
+    "solo": false,
+    "passageCount": 2,
+    "pdf": "assets/pdf/ave-verum.pdf",
+    "passagesData": "data/passages/ave-verum.json"
+  },
+  {
+    "id": "total-praise",
+    "title": "Total Praise",
+    "composer": "arr. Daniël Okafor",
+    "genre": "Gospel",
+    "voices": [
+      "S",
+      "A",
+      "T",
+      "B"
+    ],
+    "solo": true,
+    "passageCount": 3,
+    "pdf": "assets/pdf/total-praise.pdf",
+    "passagesData": "data/passages/total-praise.json"
+  },
+  {
+    "id": "danny-boy",
+    "title": "Danny Boy",
+    "composer": "arr. Ruth Jansen",
+    "genre": "Ierse ballade",
+    "voices": [
+      "S",
+      "A",
+      "T",
+      "B"
+    ],
+    "solo": false,
+    "passageCount": 1,
+    "pdf": "assets/pdf/danny-boy.pdf",
+    "passagesData": "data/passages/danny-boy.json"
+  },
+  {
+    "id": "nunc-dimittis",
+    "title": "Nunc Dimittis",
+    "composer": "arr. Peter van Loon",
+    "genre": "Klassiek · Avondzang",
+    "voices": [
+      "S",
+      "A",
+      "T",
+      "B"
+    ],
+    "solo": false,
+    "passageCount": 2,
+    "pdf": "assets/pdf/nunc-dimittis.pdf",
+    "passagesData": "data/passages/nunc-dimittis.json"
+  },
+  {
+    "id": "shenandoah",
+    "title": "Shenandoah",
+    "composer": "arr. Ilse Bakker",
+    "genre": "Volkslied",
+    "voices": [
+      "S",
+      "A",
+      "T",
+      "B"
+    ],
+    "solo": false,
+    "passageCount": 2,
+    "pdf": "assets/pdf/shenandoah.pdf",
+    "passagesData": "data/passages/shenandoah.json"
+  },
+  {
+    "id": "locus-iste",
+    "title": "Locus Iste",
+    "composer": "arr. Marieke Hendriks",
+    "genre": "Klassiek · Motet",
+    "voices": [
+      "S",
+      "A",
+      "T",
+      "B"
+    ],
+    "solo": false,
+    "passageCount": 3,
+    "pdf": "assets/pdf/locus-iste.pdf",
+    "passagesData": "data/passages/locus-iste.json"
+  }
+]

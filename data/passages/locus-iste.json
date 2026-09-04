@@ -1,0 +1,35 @@
+[
+  {
+    "id": "locus-iste-s-0",
+    "title": "Sopraan, maat 1-2 — Inzet",
+    "description": "De a-capellainzet zonder voorspel.",
+    "audio": "assets/audio/locus-iste/inzet.mp3",
+    "page": 1,
+    "xPct": 0.1008,
+    "yPct": 0.1212,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "locus-iste-t-1",
+    "title": "Tenor, maat 2-3 — Kruising",
+    "description": "Stemkruising met de altpartij.",
+    "audio": "assets/audio/locus-iste/kruising.mp3",
+    "page": 2,
+    "xPct": 0.3004,
+    "yPct": 0.1212,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "locus-iste-b-3",
+    "title": "Bas, maat 4-4 — Orgelpunt",
+    "description": "Lang aangehouden lage toon onder de andere stemmen.",
+    "audio": "assets/audio/locus-iste/orgelpunt.mp3",
+    "page": 2,
+    "xPct": 0.6996,
+    "yPct": 0.2281,
+    "widthPct": 0.1996,
+    "heightPct": 0.0523
+  }
+]

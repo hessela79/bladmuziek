@@ -3,32 +3,43 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bladmuziek met afspeelknoppen — demo</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>" />
+  <title>Notenmap — kies een stuk</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23b9822f%22><circle cx=%226%22 cy=%2217%22 r=%222.4%22/><circle cx=%2215%22 cy=%2215%22 r=%222.4%22/><path d=%22M8.4 17V6.5L17.4 4.5V13.5%22 stroke=%22%23b9822f%22 stroke-width=%221.6%22 fill=%22none%22/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>Bladmuziek met afspeelknoppen</h1>
-    <p class="subtitle">
-      Demo: klik op een gemarkeerde passage om het bijbehorende oefenfragment te horen.
-    </p>
+  <header class="app-header">
+    <div class="app-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="17" r="2.4" fill="var(--gold)" stroke="none" />
+        <circle cx="15" cy="15" r="2.4" fill="var(--gold)" stroke="none" />
+        <path d="M8.4 17V6.5L17.4 4.5V13.5" />
+        <path d="M8.4 8.5L17.4 6.5" />
+      </svg>
+      <div class="app-logo-text serif">Notenmap</div>
+    </div>
+    <div class="app-header-meta">Kamerkoor Cantavis</div>
   </header>
 
+  <section class="hero staff-band">
+    <svg class="note-watermark" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1">
+      <circle cx="6" cy="17" r="2.4" fill="var(--ink)" stroke="none" />
+      <circle cx="15" cy="15" r="2.4" fill="var(--ink)" stroke="none" />
+      <path d="M8.4 17V6.5L17.4 4.5V13.5" />
+      <path d="M8.4 8.5L17.4 6.5" />
+    </svg>
+    <h1 class="serif">Kies een stuk om te oefenen</h1>
+    <p>Tik op een stuk voor de bladmuziek en de oefenfragmenten van de lastige passages.</p>
+  </section>
+
   <main>
-    <div id="pdf-container" class="pdf-container">
-      <p id="status" class="status">Bladmuziek wordt geladen…</p>
+    <div id="piece-grid" class="piece-grid">
+      <p class="status">Stukken worden geladen…</p>
     </div>
   </main>
 
-  <div id="player-bar" class="player-bar" hidden>
-    <button id="player-stop" class="player-stop" aria-label="Stoppen">■</button>
-    <div class="player-info">
-      <div id="player-title" class="player-title">—</div>
-      <div id="player-desc" class="player-desc"></div>
-    </div>
-  </div>
-
-  <script src="js/app.js" type="module"></script>
+  <script src="js/home.js" type="module"></script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "ave-verum-s-1",
+    "title": "Sopraan, maat 2-3 — Moeilijke sprong",
+    "description": "Lastige sprong in de sopraanpartij.",
+    "audio": "assets/audio/ave-verum/moeilijke-sprong.mp3",
+    "page": 1,
+    "xPct": 0.3004,
+    "yPct": 0.1212,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "ave-verum-t-2",
+    "title": "Tenor, maat 3-4 — Samenzang",
+    "description": "Samenzang met de andere stemmen die vaak misgaat.",
+    "audio": "assets/audio/ave-verum/samenzang.mp3",
+    "page": 2,
+    "xPct": 0.5,
+    "yPct": 0.1212,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  }
+]

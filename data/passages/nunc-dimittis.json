@@ -1,0 +1,24 @@
+[
+  {
+    "id": "nunc-dimittis-a-0",
+    "title": "Alt, maat 1-2 — Modulatie",
+    "description": "Modulatie die vaak vals wordt ingezet.",
+    "audio": "assets/audio/nunc-dimittis/modulatie.mp3",
+    "page": 1,
+    "xPct": 0.1008,
+    "yPct": 0.2281,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "nunc-dimittis-b-2",
+    "title": "Bas, maat 3-4 — Slotcadens",
+    "description": "De lage slotcadens.",
+    "audio": "assets/audio/nunc-dimittis/slotcadens.mp3",
+    "page": 2,
+    "xPct": 0.5,
+    "yPct": 0.2281,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  }
+]

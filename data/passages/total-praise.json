@@ -1,0 +1,35 @@
+[
+  {
+    "id": "total-praise-s-0",
+    "title": "Sopraan, maat 1-2 — Solo-inzet",
+    "description": "De solo-inzet die de sopranen samen oppakken.",
+    "audio": "assets/audio/total-praise/solo-inzet.mp3",
+    "page": 1,
+    "xPct": 0.1008,
+    "yPct": 0.1212,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "total-praise-a-1",
+    "title": "Alt, maat 2-3 — Ritme",
+    "description": "Syncopisch ritme dat vaak te vroeg komt.",
+    "audio": "assets/audio/total-praise/ritme.mp3",
+    "page": 1,
+    "xPct": 0.3004,
+    "yPct": 0.2281,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "total-praise-b-2",
+    "title": "Bas, maat 3-4 — Fundament",
+    "description": "De baslijn die de harmonie draagt.",
+    "audio": "assets/audio/total-praise/fundament.mp3",
+    "page": 2,
+    "xPct": 0.5,
+    "yPct": 0.2281,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  }
+]

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notenmap — bladmuziek</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23b9822f%22><circle cx=%226%22 cy=%2217%22 r=%222.4%22/><circle cx=%2215%22 cy=%2215%22 r=%222.4%22/><path d=%22M8.4 17V6.5L17.4 4.5V13.5%22 stroke=%22%23b9822f%22 stroke-width=%221.6%22 fill=%22none%22/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="viewer-header staff-band">
+    <svg class="note-watermark" width="160" height="160" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1" style="top:-30px;right:0;transform:rotate(8deg);">
+      <circle cx="6" cy="17" r="2.4" fill="var(--ink)" stroke="none" />
+      <circle cx="15" cy="15" r="2.4" fill="var(--ink)" stroke="none" />
+      <path d="M8.4 17V6.5L17.4 4.5V13.5" />
+      <path d="M8.4 8.5L17.4 6.5" />
+    </svg>
+    <a href="index.html" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+      Overzicht
+    </a>
+    <div>
+      <div id="viewer-title" class="viewer-title serif">…</div>
+      <div id="viewer-subtitle" class="viewer-subtitle">…</div>
+    </div>
+  </header>
+
+  <main class="viewer-main">
+    <div id="pdf-container" class="pdf-container">
+      <p id="status" class="status">Bladmuziek wordt geladen…</p>
+    </div>
+  </main>
+
+  <div id="player-bar" class="player-bar" hidden>
+    <button id="player-stop" class="player-stop" aria-label="Stoppen">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="1.5" /></svg>
+    </button>
+    <div class="player-info">
+      <div id="player-title" class="player-title">—</div>
+      <div id="player-desc" class="player-desc"></div>
+    </div>
+  </div>
+
+  <script src="js/viewer.js" type="module"></script>
+</body>
+</html>

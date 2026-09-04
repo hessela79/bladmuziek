@@ -1,0 +1,24 @@
+[
+  {
+    "id": "shenandoah-s-1",
+    "title": "Sopraan, maat 2-3 — Herhaling met variatie",
+    "description": "Tweede couplet: zelfde melodie, andere afsluiting.",
+    "audio": "assets/audio/shenandoah/herhaling-met-variatie.mp3",
+    "page": 1,
+    "xPct": 0.3004,
+    "yPct": 0.1212,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  },
+  {
+    "id": "shenandoah-a-2",
+    "title": "Alt, maat 3-4 — Tegenstem",
+    "description": "De tegenstem die tegen de melodie in beweegt.",
+    "audio": "assets/audio/shenandoah/tegenstem.mp3",
+    "page": 1,
+    "xPct": 0.5,
+    "yPct": 0.2281,
+    "widthPct": 0.3992,
+    "heightPct": 0.0523
+  }
+]
