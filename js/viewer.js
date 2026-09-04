@@ -1,11 +1,10 @@
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
+import { supabase, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor } from "./supabaseClient.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "./vendor/pdfjs/pdf.worker.min.mjs",
   import.meta.url
 ).href;
-
-const PIECES_URL = "data/pieces.json";
 
 const VOICE_LABELS = { S: "S", A: "A", T: "T", B: "B" };
 
@@ -38,17 +37,17 @@ function stopPlayback() {
   playerBar.hidden = true;
 }
 
-function playPassage(passage, button) {
+function playPassage(passage, audioUrl, button) {
   if (currentButton === button) {
     stopPlayback();
     return;
   }
   stopPlayback();
 
-  const audio = new Audio(passage.audio);
+  const audio = new Audio(audioUrl);
   audio.addEventListener("ended", stopPlayback);
   audio.addEventListener("error", () => {
-    statusEl.textContent = `Kon audio niet laden: ${passage.audio}`;
+    statusEl.textContent = `Kon audio niet laden: ${audioUrl}`;
     statusEl.hidden = false;
     stopPlayback();
   });
@@ -88,18 +87,26 @@ function buildPageWrapper(pageNumber) {
 }
 
 function addPassageButton(overlay, passage) {
+  const audioUrl = passage.audio_asset
+    ? publicUrlFor(AUDIO_BUCKET, passage.audio_asset.storage_path)
+    : null;
+
   const button = document.createElement("button");
   button.type = "button";
   button.className = "passage-button";
-  button.style.left = `${passage.xPct * 100}%`;
-  button.style.top = `${passage.yPct * 100}%`;
-  button.style.width = `${passage.widthPct * 100}%`;
-  button.style.height = `${passage.heightPct * 100}%`;
+  button.style.left = `${passage.x_pct * 100}%`;
+  button.style.top = `${passage.y_pct * 100}%`;
+  button.style.width = `${passage.width_pct * 100}%`;
+  button.style.height = `${passage.height_pct * 100}%`;
   button.setAttribute("aria-label", `Afspelen: ${passage.title}`);
   button.title = passage.title;
   button.innerHTML = `<span class="play-icon">${PLAY_ICON}</span>`;
 
-  button.addEventListener("click", () => playPassage(passage, button));
+  if (audioUrl) {
+    button.addEventListener("click", () => playPassage(passage, audioUrl, button));
+  } else {
+    button.disabled = true;
+  }
   overlay.appendChild(button);
 }
 
@@ -143,9 +150,13 @@ async function main() {
   }
 
   try {
-    const pieces = await fetch(PIECES_URL).then((r) => r.json());
-    const piece = pieces.find((p) => p.id === pieceId);
+    const { data: piece, error: pieceError } = await supabase
+      .from("pieces")
+      .select("*, pdf_asset:assets(storage_path)")
+      .eq("id", pieceId)
+      .maybeSingle();
 
+    if (pieceError) throw pieceError;
     if (!piece) {
       statusEl.textContent = "Dit stuk is niet gevonden.";
       return;
@@ -153,12 +164,18 @@ async function main() {
 
     document.title = `${piece.title} — Notenmap`;
     titleEl.textContent = piece.title;
-    subtitleEl.textContent = `${piece.composer} · ${piece.voices.map((v) => VOICE_LABELS[v] || v).join("")}${piece.solo ? " + solo" : ""}`;
+    subtitleEl.textContent = `${piece.composer || ""} · ${piece.voices.map((v) => VOICE_LABELS[v] || v).join("")}${piece.solo ? " + solo" : ""}`;
 
-    const [pdf, passages] = await Promise.all([
-      pdfjsLib.getDocument(piece.pdf).promise,
-      fetch(piece.passagesData).then((r) => r.json()),
-    ]);
+    const { data: passages, error: passagesError } = await supabase
+      .from("passages")
+      .select("*, audio_asset:assets(storage_path)")
+      .eq("piece_id", pieceId)
+      .order("sort_order", { ascending: true });
+
+    if (passagesError) throw passagesError;
+
+    const pdfUrl = publicUrlFor(PDF_BUCKET, piece.pdf_asset.storage_path);
+    const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
 
     const passagesByPage = new Map();
     for (const passage of passages) {

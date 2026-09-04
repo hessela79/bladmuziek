@@ -1,4 +1,4 @@
-const PIECES_URL = "data/pieces.json";
+import { supabase } from "./supabaseClient.js";
 
 const VOICE_LABELS = { S: "S", A: "A", T: "T", B: "B" };
 
@@ -22,7 +22,7 @@ function renderCard(piece) {
     <div class="piece-card-body">
       <div>
         <div class="piece-card-title serif">${piece.title}</div>
-        <div class="piece-card-meta">${piece.composer} · ${piece.genre}</div>
+        <div class="piece-card-meta">${piece.composer || ""} · ${piece.genre || ""}</div>
       </div>
       <div class="voice-chips">${chips}${soloChip}</div>
       <div class="piece-card-footer">
@@ -36,10 +36,27 @@ function renderCard(piece) {
 
 async function main() {
   try {
-    const pieces = await fetch(PIECES_URL).then((r) => r.json());
+    const [{ data: pieces, error: piecesError }, { data: passages, error: passagesError }] =
+      await Promise.all([
+        supabase.from("pieces").select("*").order("created_at", { ascending: true }),
+        supabase.from("passages").select("piece_id"),
+      ]);
+
+    if (piecesError) throw piecesError;
+    if (passagesError) throw passagesError;
+
+    const passageCounts = new Map();
+    for (const p of passages) {
+      passageCounts.set(p.piece_id, (passageCounts.get(p.piece_id) || 0) + 1);
+    }
+
     grid.innerHTML = "";
+    if (pieces.length === 0) {
+      grid.innerHTML = `<p class="status">Nog geen stukken toegevoegd.</p>`;
+      return;
+    }
     for (const piece of pieces) {
-      grid.appendChild(renderCard(piece));
+      grid.appendChild(renderCard({ ...piece, passageCount: passageCounts.get(piece.id) || 0 }));
     }
   } catch (err) {
     console.error(err);

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notenmap — beheer</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23b9822f%22><circle cx=%226%22 cy=%2217%22 r=%222.4%22/><circle cx=%2215%22 cy=%2215%22 r=%222.4%22/><path d=%22M8.4 17V6.5L17.4 4.5V13.5%22 stroke=%22%23b9822f%22 stroke-width=%221.6%22 fill=%22none%22/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,500;1,600&family=Work+Sans:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="17" r="2.4" fill="var(--gold)" stroke="none" />
+        <circle cx="15" cy="15" r="2.4" fill="var(--gold)" stroke="none" />
+        <path d="M8.4 17V6.5L17.4 4.5V13.5" />
+        <path d="M8.4 8.5L17.4 6.5" />
+      </svg>
+      <div class="app-logo-text serif">Notenmap · beheer</div>
+    </div>
+    <a href="index.html" class="back-link">Naar het overzicht</a>
+  </header>
+
+  <main class="admin-main">
+
+    <section id="list-view">
+      <div class="admin-toolbar">
+        <h1 class="serif admin-heading">Stukken</h1>
+        <button id="new-piece-btn" class="btn btn-primary">+ Nieuw stuk</button>
+      </div>
+      <div id="piece-list" class="admin-piece-list">
+        <p class="status">Stukken worden geladen…</p>
+      </div>
+
+      <div class="admin-toolbar" style="margin-top:48px;">
+        <h2 class="serif admin-heading">Bibliotheek</h2>
+        <button id="toggle-library-btn" class="btn btn-secondary">Tonen</button>
+      </div>
+      <div id="asset-library" class="asset-library" hidden></div>
+    </section>
+
+    <section id="editor-view" hidden>
+      <div class="admin-toolbar">
+        <h1 id="editor-heading" class="serif admin-heading">Nieuw stuk</h1>
+        <div style="display:flex;gap:10px;">
+          <button id="cancel-btn" class="btn btn-secondary">Annuleren</button>
+          <button id="save-btn" class="btn btn-primary">Opslaan</button>
+        </div>
+      </div>
+      <p id="editor-status" class="status" hidden></p>
+
+      <div class="editor-grid">
+        <div class="editor-fields">
+          <label class="field">
+            <span>Titel</span>
+            <input id="f-title" type="text" required />
+          </label>
+          <label class="field">
+            <span>Arrangeur</span>
+            <input id="f-composer" type="text" placeholder="arr. …" />
+          </label>
+          <label class="field">
+            <span>Genre</span>
+            <input id="f-genre" type="text" placeholder="Klassiek · Latijn" />
+          </label>
+          <div class="field">
+            <span>Stemgroepen</span>
+            <div class="voice-checkboxes">
+              <label><input type="checkbox" value="S" class="f-voice" /> Sopraan</label>
+              <label><input type="checkbox" value="A" class="f-voice" /> Alt</label>
+              <label><input type="checkbox" value="T" class="f-voice" /> Tenor</label>
+              <label><input type="checkbox" value="B" class="f-voice" /> Bas</label>
+            </div>
+            <label style="margin-top:6px;"><input type="checkbox" id="f-solo" /> Bevat solopartij</label>
+          </div>
+
+          <div class="field">
+            <span>Bladmuziek (PDF)</span>
+            <select id="f-pdf-select">
+              <option value="">— kies uit bibliotheek —</option>
+            </select>
+            <div class="field-or">of nieuw bestand uploaden</div>
+            <input id="f-pdf-upload" type="file" accept="application/pdf" />
+          </div>
+        </div>
+
+        <div class="editor-pdf">
+          <div class="pdf-nav" id="pdf-nav" hidden>
+            <button id="pdf-prev" class="btn btn-secondary btn-small">← Vorige pagina</button>
+            <span id="pdf-page-indicator"></span>
+            <button id="pdf-next" class="btn btn-secondary btn-small">Volgende pagina →</button>
+          </div>
+          <div id="admin-pdf-container" class="pdf-container">
+            <p class="status">Kies of upload eerst een PDF.</p>
+          </div>
+          <button id="add-passage-btn" class="btn btn-primary" style="margin-top:14px;" hidden>+ Passage tekenen</button>
+          <p id="draw-hint" class="draw-hint" hidden>Sleep een rechthoek over de moeilijke passage op de bladmuziek.</p>
+        </div>
+      </div>
+
+      <h2 class="serif admin-heading" style="margin-top:36px;">Passages</h2>
+      <div id="passage-list" class="passage-list">
+        <p class="status">Nog geen passages.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Formulier voor het toevoegen/bewerken van één passage -->
+  <div id="passage-modal" class="modal" hidden>
+    <div class="modal-card">
+      <h3 class="serif" id="passage-modal-title">Passage</h3>
+      <label class="field">
+        <span>Titel</span>
+        <input id="pf-title" type="text" placeholder="Sopraan, maat 5-6 — moeilijke sprong" />
+      </label>
+      <label class="field">
+        <span>Beschrijving</span>
+        <textarea id="pf-description" rows="2" placeholder="Wat maakt deze passage lastig?"></textarea>
+      </label>
+      <div class="field">
+        <span>Oefenfragment (mp3)</span>
+        <select id="pf-audio-select">
+          <option value="">— kies uit bibliotheek —</option>
+        </select>
+        <div class="field-or">of nieuw bestand uploaden</div>
+        <input id="pf-audio-upload" type="file" accept="audio/mpeg,audio/mp3" />
+      </div>
+      <div class="modal-actions">
+        <button id="pf-delete" class="btn btn-danger" hidden>Verwijderen</button>
+        <div style="flex:1;"></div>
+        <button id="pf-cancel" class="btn btn-secondary">Annuleren</button>
+        <button id="pf-save" class="btn btn-primary">Bewaren</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/vendor/supabase/supabase.js"></script>
+  <script src="js/admin.js" type="module"></script>
+</body>
+</html>
