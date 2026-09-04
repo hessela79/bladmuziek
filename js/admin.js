@@ -26,6 +26,7 @@ const fComposer = document.getElementById("f-composer");
 const fGenre = document.getElementById("f-genre");
 const fVoices = Array.from(document.querySelectorAll(".f-voice"));
 const fSolo = document.getElementById("f-solo");
+const fVisible = document.getElementById("f-visible");
 const fPdfSelect = document.getElementById("f-pdf-select");
 const fPdfUpload = document.getElementById("f-pdf-upload");
 
@@ -180,7 +181,7 @@ function renderPieceList(counts) {
   pieceListEl.innerHTML = "";
   for (const piece of pieces) {
     const row = document.createElement("div");
-    row.className = "admin-piece-row";
+    row.className = "admin-piece-row" + (piece.visible === false ? " hidden-piece" : "");
     row.draggable = true;
     row.innerHTML = `
       <div class="drag-handle" title="Sleep om de volgorde te wijzigen">
@@ -191,12 +192,29 @@ function renderPieceList(counts) {
         <div class="admin-piece-row-meta">${piece.composer || ""} · ${piece.genre || ""} · ${counts.get(piece.id) || 0} passage(s)</div>
       </div>
       <div class="admin-piece-row-actions">
+        <label class="field-checkbox visibility-toggle" title="Zichtbaar in het overzicht voor gebruikers">
+          <input type="checkbox" class="visibility-checkbox" ${piece.visible === false ? "" : "checked"} />
+          Zichtbaar
+        </label>
         <button class="btn btn-secondary btn-small" data-action="edit">Bewerken</button>
         <button class="btn btn-danger btn-small" data-action="delete">Verwijderen</button>
       </div>
     `;
     row.querySelector('[data-action="edit"]').addEventListener("click", () => openEditor(piece));
     row.querySelector('[data-action="delete"]').addEventListener("click", () => deletePiece(piece));
+    row.querySelector(".visibility-checkbox").addEventListener("change", async (e) => {
+      const newVisible = e.target.checked;
+      const previous = piece.visible !== false;
+      piece.visible = newVisible;
+      row.classList.toggle("hidden-piece", !newVisible);
+      const { error } = await supabase.from("pieces").update({ visible: newVisible }).eq("id", piece.id);
+      if (error) {
+        alert("Zichtbaarheid aanpassen mislukt: " + error.message);
+        piece.visible = previous;
+        e.target.checked = previous;
+        row.classList.toggle("hidden-piece", !previous);
+      }
+    });
 
     row.addEventListener("dragstart", (e) => {
       draggedPieceId = piece.id;
@@ -384,6 +402,7 @@ async function openEditor(piece) {
     fComposer.value = piece.composer || "";
     fGenre.value = piece.genre || "";
     fSolo.checked = !!piece.solo;
+    fVisible.checked = piece.visible !== false;
     for (const cb of fVoices) cb.checked = piece.voices.includes(cb.value);
     state.pdfAssetId = piece.pdf_asset_id;
     fPdfSelect.value = piece.pdf_asset_id || "";
@@ -420,6 +439,7 @@ async function openEditor(piece) {
     fComposer.value = "";
     fGenre.value = "";
     fSolo.checked = false;
+    fVisible.checked = true;
     for (const cb of fVoices) cb.checked = false;
     fPdfSelect.value = "";
     fPdfUpload.value = "";
@@ -815,6 +835,7 @@ saveBtn.addEventListener("click", async () => {
       genre: fGenre.value.trim(),
       voices,
       solo: fSolo.checked,
+      visible: fVisible.checked,
       pdf_asset_id: pdfAssetId,
     };
     if (state.isNew) {

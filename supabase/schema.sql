@@ -33,6 +33,7 @@ create table if not exists pieces (
   genre text,
   voices text[] not null default '{}',
   solo boolean not null default false,
+  visible boolean not null default true,
   pdf_asset_id uuid references assets (id) on delete set null,
   sort_order int not null default 0,
   created_at timestamptz not null default now()
