@@ -174,9 +174,9 @@ ${pagesHtml}
 const PLAY_ICON_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#fffdf8"><path d="M8 5v14l11-7z"/></svg>';
 const NOTE_ICON_SVG =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fffdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-const PLAY_ICON_BIG_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const PLAY_ICON_BIG_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
 const PAUSE_ICON_BIG_SVG =
-  '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+  '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 
 const EXPORT_CSS = `
   :root {
@@ -233,7 +233,7 @@ const EXPORT_CSS = `
   }
   .player-controls[hidden] { display: none; }
   .player-btn-main {
-    width: 42px; height: 42px; border-radius: 50%; background: var(--gold);
+    width: 46px; height: 46px; border-radius: 50%; background: var(--gold);
     color: var(--wood-900); border: none; display: flex; align-items: center;
     justify-content: center; cursor: pointer;
   }

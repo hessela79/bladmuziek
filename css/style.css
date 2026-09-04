@@ -508,43 +508,57 @@ button {
 
 .player-btn {
   flex-shrink: 0;
-  height: 36px;
-  min-width: 36px;
-  padding: 0 8px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0 10px;
   border-radius: 999px;
-  background: rgba(247, 239, 224, 0.1);
-  border: none;
-  color: #f7efe0;
+  background: rgba(247, 239, 224, 0.16);
+  border: 1.5px solid rgba(247, 239, 224, 0.3);
+  color: #fffdf8;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   cursor: pointer;
-  font-size: 0.62rem;
+  font-size: 0.68rem;
   font-weight: 700;
 }
 
 .player-btn:hover {
-  background: rgba(247, 239, 224, 0.2);
+  background: rgba(247, 239, 224, 0.3);
+  border-color: rgba(247, 239, 224, 0.5);
+}
+
+.player-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .player-btn-main {
-  width: 42px;
-  height: 42px;
-  min-width: 42px;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
   background: var(--gold);
+  border-color: var(--gold);
   color: var(--wood-900);
 }
 
 .player-btn-main:hover {
   background: var(--gold-bright);
+  border-color: var(--gold-bright);
+}
+
+.player-btn-main svg {
+  width: 20px;
+  height: 20px;
 }
 
 .player-rates {
   display: flex;
   gap: 4px;
   margin-left: auto;
-  background: rgba(247, 239, 224, 0.08);
+  background: rgba(247, 239, 224, 0.14);
+  border: 1.5px solid rgba(247, 239, 224, 0.25);
   border-radius: 999px;
   padding: 3px;
 }
@@ -552,10 +566,10 @@ button {
 .rate-btn {
   border: none;
   background: transparent;
-  color: #cbb99a;
-  font-size: 0.7rem;
+  color: #f0e2c8;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 999px;
   cursor: pointer;
 }

@@ -34,8 +34,8 @@ const PLAY_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#fffdf8
 const STOP_ICON = '<svg width="10" height="10" viewBox="0 0 24 24" fill="#fffdf8"><rect x="5" y="5" width="14" height="14" rx="1.5"/></svg>';
 const NOTE_ICON =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fffdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-const ICON_PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-const ICON_PAUSE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+const ICON_PLAY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const ICON_PAUSE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 
 let allPassages = [];
 let currentIndex = -1;
