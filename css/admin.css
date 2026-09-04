@@ -220,6 +220,20 @@
   font-style: italic;
 }
 
+.field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+#pf-audio-field.disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 .voice-checkboxes {
   display: flex;
   gap: 12px;
@@ -305,6 +319,25 @@
   font-weight: 700;
   border-radius: 999px;
   padding: 2px 6px;
+}
+
+.editor-passage-marker.note-only {
+  border-color: var(--ink-muted);
+}
+
+.editor-passage-marker.note-only .marker-badge {
+  background: var(--ink-muted);
+}
+
+.passage-row-note-badge {
+  display: inline-block;
+  background: var(--parchment-deep);
+  color: var(--ink-muted);
+  font-size: 0.68rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-left: 6px;
 }
 
 /* ---------- Passagelijst ---------- */

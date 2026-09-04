@@ -43,6 +43,8 @@ const passageModal = document.getElementById("passage-modal");
 const passageModalTitle = document.getElementById("passage-modal-title");
 const pfTitle = document.getElementById("pf-title");
 const pfDescription = document.getElementById("pf-description");
+const pfNoAudio = document.getElementById("pf-no-audio");
+const pfAudioField = document.getElementById("pf-audio-field");
 const pfAudioSelect = document.getElementById("pf-audio-select");
 const pfAudioUpload = document.getElementById("pf-audio-upload");
 const pfDelete = document.getElementById("pf-delete");
@@ -471,8 +473,9 @@ async function renderCurrentPage() {
 function renderMarkersOnOverlay(overlay) {
   for (const passage of state.passages) {
     if (passage.deleted || passage.page !== state.currentPage) continue;
+    const hasAudio = !!(passage.audioAssetId || passage.audioFile);
     const marker = document.createElement("div");
-    marker.className = "editor-passage-marker";
+    marker.className = "editor-passage-marker" + (hasAudio ? "" : " note-only");
     marker.style.left = `${passage.xPct * 100}%`;
     marker.style.top = `${passage.yPct * 100}%`;
     marker.style.width = `${passage.widthPct * 100}%`;
@@ -594,6 +597,18 @@ function attachDrawHandlers(overlay) {
 
 // ---------- Passage modal ----------
 
+function updateNoAudioFieldState() {
+  pfAudioField.classList.toggle("disabled", pfNoAudio.checked);
+}
+
+pfNoAudio.addEventListener("change", () => {
+  if (pfNoAudio.checked) {
+    pfAudioSelect.value = "";
+    pfAudioUpload.value = "";
+  }
+  updateNoAudioFieldState();
+});
+
 function openPassageModal(key) {
   activePassageKey = key;
   if (key) {
@@ -603,6 +618,7 @@ function openPassageModal(key) {
     pfDescription.value = passage.description || "";
     pfAudioSelect.value = passage.audioAssetId || "";
     pfAudioUpload.value = "";
+    pfNoAudio.checked = !passage.audioAssetId && !passage.audioFile;
     pfDelete.hidden = false;
   } else {
     passageModalTitle.textContent = "Nieuwe passage";
@@ -610,8 +626,10 @@ function openPassageModal(key) {
     pfDescription.value = "";
     pfAudioSelect.value = "";
     pfAudioUpload.value = "";
+    pfNoAudio.checked = false;
     pfDelete.hidden = true;
   }
+  updateNoAudioFieldState();
   passageModal.hidden = false;
 }
 
@@ -629,14 +647,17 @@ pfSave.addEventListener("click", async () => {
     alert("Geef de passage een titel.");
     return;
   }
-  const audioFile = pfAudioUpload.files[0] || null;
-  const audioAssetId = pfAudioSelect.value || null;
+  const audioFile = pfNoAudio.checked ? null : pfAudioUpload.files[0] || null;
+  const audioAssetId = pfNoAudio.checked ? null : pfAudioSelect.value || null;
 
   if (activePassageKey) {
     const passage = state.passages.find((p) => p._key === activePassageKey);
     passage.title = title;
     passage.description = pfDescription.value.trim();
-    if (audioFile) {
+    if (pfNoAudio.checked) {
+      passage.audioFile = null;
+      passage.audioAssetId = null;
+    } else if (audioFile) {
       passage.audioFile = audioFile;
       passage.audioAssetId = null;
     } else if (audioAssetId) {
@@ -688,11 +709,12 @@ function renderPassageList() {
   }
   passageListEl.innerHTML = "";
   for (const passage of visible) {
+    const hasAudio = !!(passage.audioAssetId || passage.audioFile);
     const row = document.createElement("div");
     row.className = "passage-row";
     row.innerHTML = `
       <div>
-        <div class="passage-row-title">${passage.title}</div>
+        <div class="passage-row-title">${passage.title}${hasAudio ? "" : ' <span class="passage-row-note-badge">alleen opmerking</span>'}</div>
         <div class="passage-row-meta">Pagina ${passage.page} · ${passage.description || ""}</div>
       </div>
       <button class="btn btn-secondary btn-small">Bewerken</button>
@@ -802,9 +824,6 @@ saveBtn.addEventListener("click", async () => {
         const path = `${pieceId}/${Date.now()}-${passage.audioFile.name}`;
         const asset = await uploadAsset(AUDIO_BUCKET, path, passage.audioFile);
         audioAssetId = asset.id;
-      }
-      if (!audioAssetId) {
-        throw new Error(`Passage "${passage.title}" heeft geen oefenfragment.`);
       }
 
       const passageRow = {

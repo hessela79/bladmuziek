@@ -124,8 +124,12 @@
         <span>Beschrijving</span>
         <textarea id="pf-description" rows="2" placeholder="Wat maakt deze passage lastig?"></textarea>
       </label>
-      <div class="field">
-        <span>Oefenfragment (mp3 of mp4)</span>
+      <label class="field-checkbox">
+        <input type="checkbox" id="pf-no-audio" />
+        Alleen een opmerking (geen oefenfragment)
+      </label>
+      <div class="field" id="pf-audio-field">
+        <span>Oefenfragment (mp3 of mp4) — optioneel</span>
         <select id="pf-audio-select">
           <option value="">— kies uit bibliotheek —</option>
         </select>
