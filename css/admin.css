@@ -223,11 +223,16 @@
   padding: 0;
 }
 
-.editor-pdf .page-wrapper {
-  cursor: crosshair;
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 
 .pdf-container.draw-mode .page-wrapper {
+  cursor: crosshair;
   outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
@@ -251,7 +256,7 @@
 .draw-hint {
   font-size: 0.8rem;
   color: var(--gold);
-  margin-top: 8px;
+  margin: 0;
 }
 
 .draw-rect {
