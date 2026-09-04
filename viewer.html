@@ -47,26 +47,26 @@
   </div>
 
   <div id="player-bar" class="player-bar" hidden>
-    <div class="player-row">
+    <button id="player-close" class="player-close" aria-label="Sluiten">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+
+    <button id="player-prev" class="player-edge-btn" aria-label="Vorige passage" title="Vorige passage">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6l-9 6 9 6z"/></svg>
+    </button>
+
+    <div class="player-center">
       <div class="player-info">
         <div id="player-title" class="player-title">—</div>
         <div id="player-desc" class="player-desc"></div>
       </div>
-      <button id="player-close" class="player-close" aria-label="Sluiten">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
-    <div id="player-controls" class="player-controls">
-      <button id="player-prev" class="player-btn" aria-label="Vorige passage" title="Vorige passage">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6l-9 6 9 6z"/></svg>
-      </button>
       <div id="player-audio-controls" class="player-audio-controls">
         <button id="player-back5" class="player-btn" aria-label="5 seconden terug" title="5 sec terug">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
           <span>5s</span>
         </button>
         <button id="player-playpause" class="player-btn player-btn-main" aria-label="Afspelen of pauzeren" title="Afspelen/pauzeren">
-          <svg id="playpause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="playpause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l10-7z"/></svg>
         </button>
         <button id="player-fwd5" class="player-btn" aria-label="5 seconden vooruit" title="5 sec vooruit">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
@@ -78,10 +78,11 @@
           <button class="rate-btn" data-rate="1.5">1.5x</button>
         </div>
       </div>
-      <button id="player-next" class="player-btn" aria-label="Volgende passage" title="Volgende passage">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l9 6-9 6z"/></svg>
-      </button>
     </div>
+
+    <button id="player-next" class="player-edge-btn" aria-label="Volgende passage" title="Volgende passage">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l9 6-9 6z"/></svg>
+    </button>
   </div>
 
   <script src="js/vendor/supabase/supabase.js"></script>

@@ -174,7 +174,7 @@ ${pagesHtml}
 const PLAY_ICON_SVG = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#fffdf8"><path d="M8 5v14l11-7z"/></svg>';
 const NOTE_ICON_SVG =
   '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fffdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
-const PLAY_ICON_BIG_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+const PLAY_ICON_BIG_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l10-7z"/></svg>';
 const PAUSE_ICON_BIG_SVG =
   '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
 
