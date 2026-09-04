@@ -11,7 +11,14 @@ const SUPABASE_URL = "https://gtwsjpkuyiaxeaqmcvgs.supabase.co";
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0d3NqcGt1eWlheGVhcW1jdmdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0OTc3MTQsImV4cCI6MjEwNDA3MzcxNH0.LmMbW4mDdSbM5l52XAWktJdRn-u-45D1lkj83P2xhVU";
 
-export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Zonder dit kan de browser een gewone (niet-harde) verversing soms
+// beantwoorden met een gecachte data-aanvraag, waardoor bijvoorbeeld
+// een net versleepte volgorde niet meteen zichtbaar is.
+export const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  global: {
+    fetch: (url, options = {}) => fetch(url, { ...options, cache: "no-store" }),
+  },
+});
 
 export const PDF_BUCKET = "pdfs";
 export const AUDIO_BUCKET = "audio";
