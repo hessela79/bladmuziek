@@ -51,15 +51,16 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
 
-    <button id="player-prev" class="player-edge-btn" aria-label="Vorige passage" title="Vorige passage">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6l-9 6 9 6z"/></svg>
-    </button>
+    <div class="player-info">
+      <div id="player-title" class="player-title">—</div>
+      <div id="player-desc" class="player-desc"></div>
+    </div>
 
-    <div class="player-center">
-      <div class="player-info">
-        <div id="player-title" class="player-title">—</div>
-        <div id="player-desc" class="player-desc"></div>
-      </div>
+    <div class="player-nav-row">
+      <button id="player-prev" class="player-edge-btn" aria-label="Vorige passage" title="Vorige passage">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6l-9 6 9 6z"/></svg>
+      </button>
+
       <div id="player-audio-controls" class="player-audio-controls">
         <button id="player-back5" class="player-btn" aria-label="5 seconden terug" title="5 sec terug">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
@@ -78,11 +79,11 @@
           <button class="rate-btn" data-rate="1.5">1.5x</button>
         </div>
       </div>
-    </div>
 
-    <button id="player-next" class="player-edge-btn" aria-label="Volgende passage" title="Volgende passage">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l9 6-9 6z"/></svg>
-    </button>
+      <button id="player-next" class="player-edge-btn" aria-label="Volgende passage" title="Volgende passage">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l9 6-9 6z"/></svg>
+      </button>
+    </div>
   </div>
 
   <script src="js/vendor/supabase/supabase.js"></script>
