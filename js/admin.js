@@ -183,7 +183,7 @@ async function refreshList() {
 }
 
 async function deletePiece(piece) {
-  if (!confirm(`"${piece.title}" verwijderen? De PDF en mp3's blijven in de bibliotheek staan.`)) return;
+  if (!confirm(`"${piece.title}" verwijderen? De PDF en oefenfragmenten blijven in de bibliotheek staan.`)) return;
   const { error } = await supabase.from("pieces").delete().eq("id", piece.id);
   if (error) {
     alert("Verwijderen mislukt: " + error.message);
@@ -196,12 +196,18 @@ async function deletePiece(piece) {
 
 let libraryVisible = false;
 
+function fileKindLabel(asset) {
+  if (asset.type === "pdf") return "PDF";
+  const ext = asset.filename.split(".").pop().toLowerCase();
+  return ext || "audio";
+}
+
 function assetRowHtml(asset, useLabel) {
   return `
     <div class="asset-row">
       <div>
         <strong>${asset.filename}</strong>
-        <div class="asset-row-meta">${asset.type === "pdf" ? "PDF" : "mp3"}${useLabel ? " · " + useLabel : ""}</div>
+        <div class="asset-row-meta">${fileKindLabel(asset)}${useLabel ? " · " + useLabel : ""}</div>
       </div>
       <button class="btn btn-danger btn-small" data-asset-id="${asset.id}">Verwijderen</button>
     </div>
