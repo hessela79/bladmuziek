@@ -6,10 +6,11 @@
 -- + passages (moeilijke passages per stuk: positie op de pagina + een
 --   audio-asset).
 --
--- Rechtenniveau: er is er nog geen. RLS staat uit op de tabellen en de
--- storage-policies staan open, zodat de app zonder login kan lezen én
--- schrijven. Zodra er een rechtenniveau bijkomt, is dit het eerste dat
--- vervangen wordt door echte policies (zie opmerking onderaan).
+-- Rechtenniveau: er is er nog geen, maar RLS staat wél aan met
+-- expliciete, voorlopig volledig open policies (in plaats van RLS
+-- helemaal uitgeschakeld) — zo kan een echt rechtenniveau er straks
+-- ingezet worden door "using (true)" te vervangen, zonder de
+-- structuur om te hoeven bouwen.
 
 create extension if not exists pgcrypto;
 
@@ -33,6 +34,7 @@ create table if not exists pieces (
   voices text[] not null default '{}',
   solo boolean not null default false,
   pdf_asset_id uuid references assets (id) on delete set null,
+  sort_order int not null default 0,
   created_at timestamptz not null default now()
 );
 
@@ -51,10 +53,26 @@ create table if not exists passages (
   created_at timestamptz not null default now()
 );
 
--- Geen rechtenniveau nog: RLS uit = de anon-key mag alles lezen/schrijven.
-alter table assets disable row level security;
-alter table pieces disable row level security;
-alter table passages disable row level security;
+-- RLS aan, met (voorlopig) volledig open policies — zie opmerking
+-- bovenaan dit bestand.
+alter table assets enable row level security;
+alter table pieces enable row level security;
+alter table passages enable row level security;
+
+create policy "open select assets" on assets for select using (true);
+create policy "open insert assets" on assets for insert with check (true);
+create policy "open update assets" on assets for update using (true);
+create policy "open delete assets" on assets for delete using (true);
+
+create policy "open select pieces" on pieces for select using (true);
+create policy "open insert pieces" on pieces for insert with check (true);
+create policy "open update pieces" on pieces for update using (true);
+create policy "open delete pieces" on pieces for delete using (true);
+
+create policy "open select passages" on passages for select using (true);
+create policy "open insert passages" on passages for insert with check (true);
+create policy "open update passages" on passages for update using (true);
+create policy "open delete passages" on passages for delete using (true);
 
 -- ---------- Storage: buckets voor de bestanden zelf ----------
 
@@ -101,7 +119,7 @@ drop policy if exists "public delete audio" on storage.objects;
 create policy "public delete audio" on storage.objects
   for delete using (bucket_id = 'audio');
 
--- Zodra er een rechtenniveau bijkomt: RLS weer aanzetten op de 3
--- tabellen + de "public write/update/delete"-storage-policies vervangen
+-- Zodra er een rechtenniveau bijkomt: vervang de "open ..."-policies
+-- op de 3 tabellen en de "public write/update/delete"-storage-policies
 -- door varianten met `using (auth.role() = 'authenticated')` (of een
 -- rollen-check). Lezen kan dan vrijwel zeker open blijven.

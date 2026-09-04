@@ -38,7 +38,7 @@ async function main() {
   try {
     const [{ data: pieces, error: piecesError }, { data: passages, error: passagesError }] =
       await Promise.all([
-        supabase.from("pieces").select("*").order("created_at", { ascending: true }),
+        supabase.from("pieces").select("*").order("sort_order", { ascending: true }),
         supabase.from("passages").select("piece_id"),
       ]);
 

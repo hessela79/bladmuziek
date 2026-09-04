@@ -135,7 +135,7 @@ async function buildGroupedAudioSelect() {
 }
 
 async function loadPieces() {
-  const { data, error } = await supabase.from("pieces").select("*").order("created_at");
+  const { data, error } = await supabase.from("pieces").select("*").order("sort_order");
   if (error) throw error;
   pieces = data;
 }
@@ -150,7 +150,11 @@ async function passageCountsByPiece() {
 
 // ---------- List view ----------
 
+let lastCounts = new Map();
+let draggedPieceId = null;
+
 function renderPieceList(counts) {
+  lastCounts = counts;
   if (pieces.length === 0) {
     pieceListEl.innerHTML = `<p class="status">Nog geen stukken toegevoegd.</p>`;
     return;
@@ -159,8 +163,12 @@ function renderPieceList(counts) {
   for (const piece of pieces) {
     const row = document.createElement("div");
     row.className = "admin-piece-row";
+    row.draggable = true;
     row.innerHTML = `
-      <div>
+      <div class="drag-handle" title="Sleep om de volgorde te wijzigen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
         <div class="admin-piece-row-title serif">${piece.title}</div>
         <div class="admin-piece-row-meta">${piece.composer || ""} · ${piece.genre || ""} · ${counts.get(piece.id) || 0} passage(s)</div>
       </div>
@@ -171,8 +179,46 @@ function renderPieceList(counts) {
     `;
     row.querySelector('[data-action="edit"]').addEventListener("click", () => openEditor(piece));
     row.querySelector('[data-action="delete"]').addEventListener("click", () => deletePiece(piece));
+
+    row.addEventListener("dragstart", (e) => {
+      draggedPieceId = piece.id;
+      row.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragend", () => {
+      draggedPieceId = null;
+      pieceListEl.querySelectorAll(".admin-piece-row").forEach((r) => r.classList.remove("dragging", "drag-over"));
+    });
+    row.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (draggedPieceId && draggedPieceId !== piece.id) row.classList.add("drag-over");
+    });
+    row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+    row.addEventListener("drop", (e) => {
+      e.preventDefault();
+      row.classList.remove("drag-over");
+      if (!draggedPieceId || draggedPieceId === piece.id) return;
+      reorderPieces(draggedPieceId, piece.id);
+    });
+
     pieceListEl.appendChild(row);
   }
+}
+
+async function reorderPieces(draggedId, targetId) {
+  const fromIndex = pieces.findIndex((p) => p.id === draggedId);
+  const toIndex = pieces.findIndex((p) => p.id === targetId);
+  if (fromIndex === -1 || toIndex === -1) return;
+  const [moved] = pieces.splice(fromIndex, 1);
+  pieces.splice(toIndex, 0, moved);
+  renderPieceList(lastCounts);
+  await persistPieceOrder();
+}
+
+async function persistPieceOrder() {
+  await Promise.all(
+    pieces.map((piece, index) => supabase.from("pieces").update({ sort_order: index }).eq("id", piece.id))
+  );
 }
 
 async function refreshList() {
@@ -726,6 +772,9 @@ saveBtn.addEventListener("click", async () => {
       solo: fSolo.checked,
       pdf_asset_id: pdfAssetId,
     };
+    if (state.isNew) {
+      pieceRow.sort_order = pieces.length ? Math.max(...pieces.map((p) => p.sort_order ?? 0)) + 1 : 0;
+    }
 
     editorStatus.textContent = "Stuk opslaan…";
     if (state.isNew) {

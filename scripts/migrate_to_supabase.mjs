@@ -59,7 +59,7 @@ async function uploadFile(bucket, storagePath, filePath, mimeType) {
   return bytes.length;
 }
 
-async function migratePiece(piece) {
+async function migratePiece(piece, pieceOrder) {
   console.log(`\n== ${piece.title} (${piece.id}) ==`);
 
   // PDF
@@ -83,6 +83,7 @@ async function migratePiece(piece) {
     voices: piece.voices,
     solo: piece.solo,
     pdf_asset_id: pdfAsset.id,
+    sort_order: pieceOrder,
   });
   console.log(`  piece-rij aangemaakt`);
 
@@ -121,8 +122,8 @@ async function migratePiece(piece) {
 
 async function main() {
   const pieces = JSON.parse(readFileSync(path.join(ROOT, "data", "pieces.json"), "utf8"));
-  for (const piece of pieces) {
-    await migratePiece(piece);
+  for (let i = 0; i < pieces.length; i++) {
+    await migratePiece(pieces[i], i);
   }
   console.log("\nKlaar — alle stukken gemigreerd naar Supabase.");
 }
