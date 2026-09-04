@@ -499,6 +499,7 @@ function attachDrawHandlers(overlay) {
     drawModeOn = false;
     addPassageBtn.textContent = "+ Passage tekenen";
     drawHint.hidden = true;
+    pdfContainer.classList.remove("draw-mode");
     openPassageModal(null);
   });
 }

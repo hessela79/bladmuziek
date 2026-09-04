@@ -232,6 +232,13 @@
   outline-offset: 2px;
 }
 
+/* Tijdens het tekenen mogen bestaande markeringen de klik niet
+   onderscheppen, anders opent per ongeluk de bewerk-modal van een
+   bestaande passage in plaats van het nieuwe-passage-formulier. */
+.pdf-container.draw-mode .editor-passage-marker {
+  pointer-events: none;
+}
+
 .pdf-nav {
   display: flex;
   align-items: center;
