@@ -93,9 +93,45 @@ async function loadAssets() {
   fPdfSelect.innerHTML =
     `<option value="">— kies uit bibliotheek —</option>` +
     pdfAssets.map((a) => `<option value="${a.id}">${a.filename}</option>`).join("");
-  pfAudioSelect.innerHTML =
-    `<option value="">— kies uit bibliotheek —</option>` +
-    audioAssets.map((a) => `<option value="${a.id}">${a.filename}</option>`).join("");
+
+  await buildGroupedAudioSelect();
+}
+
+// Groepeert de mp3-keuzelijst per stuk (net als de mappen in de
+// bibliotheek hieronder), zodat je niet door één lange platte lijst
+// hoeft te zoeken.
+async function buildGroupedAudioSelect() {
+  const { data: allPieces } = await supabase.from("pieces").select("id, title");
+  const { data: allPassages } = await supabase.from("passages").select("piece_id, audio_asset_id");
+
+  const pieceTitleById = new Map((allPieces || []).map((p) => [p.id, p.title]));
+  const audioToPieceTitle = new Map();
+  for (const row of allPassages || []) {
+    if (row.audio_asset_id && !audioToPieceTitle.has(row.audio_asset_id)) {
+      audioToPieceTitle.set(row.audio_asset_id, pieceTitleById.get(row.piece_id) || null);
+    }
+  }
+
+  const groups = new Map();
+  const unused = [];
+  for (const asset of audioAssets) {
+    const title = audioToPieceTitle.get(asset.id);
+    if (title) {
+      if (!groups.has(title)) groups.set(title, []);
+      groups.get(title).push(asset);
+    } else {
+      unused.push(asset);
+    }
+  }
+
+  let html = `<option value="">— kies uit bibliotheek —</option>`;
+  for (const [title, assets] of groups) {
+    html += `<optgroup label="${title}">` + assets.map((a) => `<option value="${a.id}">${a.filename}</option>`).join("") + `</optgroup>`;
+  }
+  if (unused.length > 0) {
+    html += `<optgroup label="Ongebruikt">` + unused.map((a) => `<option value="${a.id}">${a.filename}</option>`).join("") + `</optgroup>`;
+  }
+  pfAudioSelect.innerHTML = html;
 }
 
 async function loadPieces() {
