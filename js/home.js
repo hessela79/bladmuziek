@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient.js";
+import { listPieces, listAllPassages } from "./apiClient.js";
 
 const VOICE_LABELS = { S: "S", A: "A", T: "T", B: "B" };
 
@@ -36,14 +36,10 @@ function renderCard(piece) {
 
 async function main() {
   try {
-    const [{ data: pieces, error: piecesError }, { data: passages, error: passagesError }] =
-      await Promise.all([
-        supabase.from("pieces").select("*").eq("visible", true).order("sort_order", { ascending: true }),
-        supabase.from("passages").select("piece_id"),
-      ]);
-
-    if (piecesError) throw piecesError;
-    if (passagesError) throw passagesError;
+    const [pieces, passages] = await Promise.all([
+      listPieces({ visibleOnly: true }),
+      listAllPassages(),
+    ]);
 
     const passageCounts = new Map();
     for (const p of passages) {

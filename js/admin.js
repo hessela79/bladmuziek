@@ -1,5 +1,25 @@
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
-import { supabase, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor } from "./supabaseClient.js";
+import {
+  PDF_BUCKET,
+  AUDIO_BUCKET,
+  publicUrlFor,
+  listAssets,
+  listPieces,
+  listAllPassages,
+  listPassages,
+  insertPiece,
+  updatePiece,
+  deletePiece as apiDeletePiece,
+  reorderPieces as apiReorderPieces,
+  insertPassage,
+  updatePassage,
+  deletePassage as apiDeletePassage,
+  deleteAsset as apiDeleteAsset,
+  uploadAsset,
+  login,
+  logout,
+  checkSession,
+} from "./apiClient.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "./vendor/pdfjs/pdf.worker.min.mjs",
@@ -7,6 +27,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).href;
 
 // ---------- DOM ----------
+
+const loginView = document.getElementById("login-view");
+const loginForm = document.getElementById("login-form");
+const loginPassword = document.getElementById("login-password");
+const loginError = document.getElementById("login-error");
+const logoutBtn = document.getElementById("logout-btn");
 
 const listView = document.getElementById("list-view");
 const editorView = document.getElementById("editor-view");
@@ -104,8 +130,7 @@ function slugify(text) {
 // ---------- Data loading ----------
 
 async function loadAssets() {
-  const { data, error } = await supabase.from("assets").select("*").order("filename");
-  if (error) throw error;
+  const data = await listAssets();
   pdfAssets = data.filter((a) => a.type === "pdf");
   audioAssets = data.filter((a) => a.type === "audio");
 
@@ -120,12 +145,12 @@ async function loadAssets() {
 // bibliotheek hieronder), zodat je niet door één lange platte lijst
 // hoeft te zoeken.
 async function buildGroupedAudioSelect() {
-  const { data: allPieces } = await supabase.from("pieces").select("id, title");
-  const { data: allPassages } = await supabase.from("passages").select("piece_id, audio_asset_id");
+  const allPieces = await listPieces();
+  const allPassages = await listAllPassages();
 
-  const pieceTitleById = new Map((allPieces || []).map((p) => [p.id, p.title]));
+  const pieceTitleById = new Map(allPieces.map((p) => [p.id, p.title]));
   const audioToPieceTitle = new Map();
-  for (const row of allPassages || []) {
+  for (const row of allPassages) {
     if (row.audio_asset_id && !audioToPieceTitle.has(row.audio_asset_id)) {
       audioToPieceTitle.set(row.audio_asset_id, pieceTitleById.get(row.piece_id) || null);
     }
@@ -154,14 +179,11 @@ async function buildGroupedAudioSelect() {
 }
 
 async function loadPieces() {
-  const { data, error } = await supabase.from("pieces").select("*").order("sort_order");
-  if (error) throw error;
-  pieces = data;
+  pieces = await listPieces();
 }
 
 async function passageCountsByPiece() {
-  const { data, error } = await supabase.from("passages").select("piece_id");
-  if (error) throw error;
+  const data = await listAllPassages();
   const counts = new Map();
   for (const row of data) counts.set(row.piece_id, (counts.get(row.piece_id) || 0) + 1);
   return counts;
@@ -207,9 +229,10 @@ function renderPieceList(counts) {
       const previous = piece.visible !== false;
       piece.visible = newVisible;
       row.classList.toggle("hidden-piece", !newVisible);
-      const { error } = await supabase.from("pieces").update({ visible: newVisible }).eq("id", piece.id);
-      if (error) {
-        alert("Zichtbaarheid aanpassen mislukt: " + error.message);
+      try {
+        await updatePiece(piece.id, { visible: newVisible });
+      } catch (err) {
+        alert("Zichtbaarheid aanpassen mislukt: " + err.message);
         piece.visible = previous;
         e.target.checked = previous;
         row.classList.toggle("hidden-piece", !previous);
@@ -252,9 +275,7 @@ async function reorderPieces(draggedId, targetId) {
 }
 
 async function persistPieceOrder() {
-  await Promise.all(
-    pieces.map((piece, index) => supabase.from("pieces").update({ sort_order: index }).eq("id", piece.id))
-  );
+  await apiReorderPieces(pieces.map((piece) => piece.id));
 }
 
 async function refreshList() {
@@ -266,9 +287,10 @@ async function refreshList() {
 
 async function deletePiece(piece) {
   if (!confirm(`"${piece.title}" verwijderen? De PDF en oefenfragmenten blijven in de bibliotheek staan.`)) return;
-  const { error } = await supabase.from("pieces").delete().eq("id", piece.id);
-  if (error) {
-    alert("Verwijderen mislukt: " + error.message);
+  try {
+    await apiDeletePiece(piece.id);
+  } catch (err) {
+    alert("Verwijderen mislukt: " + err.message);
     return;
   }
   await refreshList();
@@ -309,20 +331,20 @@ function folderHtml(name, innerHtml, openByDefault) {
 }
 
 async function renderAssetLibrary() {
-  const { data: allPieces } = await supabase.from("pieces").select("id, title, pdf_asset_id");
-  const { data: allPassages } = await supabase.from("passages").select("id, piece_id, audio_asset_id");
+  const allPieces = await listPieces();
+  const allPassages = await listAllPassages();
 
   const assetsById = new Map([...pdfAssets, ...audioAssets].map((a) => [a.id, a]));
   const usedAssetIds = new Set();
   let html = "";
 
-  for (const piece of allPieces || []) {
+  for (const piece of allPieces) {
     const files = [];
     if (piece.pdf_asset_id && assetsById.has(piece.pdf_asset_id)) {
       usedAssetIds.add(piece.pdf_asset_id);
       files.push(assetRowHtml(assetsById.get(piece.pdf_asset_id), "bladmuziek"));
     }
-    for (const passage of (allPassages || []).filter((p) => p.piece_id === piece.id)) {
+    for (const passage of allPassages.filter((p) => p.piece_id === piece.id)) {
       if (passage.audio_asset_id && assetsById.has(passage.audio_asset_id)) {
         usedAssetIds.add(passage.audio_asset_id);
         files.push(assetRowHtml(assetsById.get(passage.audio_asset_id), "oefenfragment"));
@@ -357,11 +379,10 @@ async function deleteAsset(asset, isUsed) {
     : `"${asset.filename}" verwijderen?`;
   if (!confirm(warning)) return;
 
-  const bucket = asset.type === "pdf" ? PDF_BUCKET : AUDIO_BUCKET;
-  await supabase.storage.from(bucket).remove([asset.storage_path]);
-  const { error } = await supabase.from("assets").delete().eq("id", asset.id);
-  if (error) {
-    alert("Verwijderen mislukt: " + error.message);
+  try {
+    await apiDeleteAsset(asset.id);
+  } catch (err) {
+    alert("Verwijderen mislukt: " + err.message);
     return;
   }
   await loadAssets();
@@ -407,12 +428,8 @@ async function openEditor(piece) {
     state.pdfAssetId = piece.pdf_asset_id;
     fPdfSelect.value = piece.pdf_asset_id || "";
 
-    const { data: passages } = await supabase
-      .from("passages")
-      .select("*")
-      .eq("piece_id", piece.id)
-      .order("sort_order");
-    state.passages = (passages || []).map((p) => ({
+    const passages = await listPassages(piece.id);
+    state.passages = passages.map((p) => ({
       _key: newKey(),
       id: p.id,
       title: p.title,
@@ -769,28 +786,6 @@ function renderPassageList() {
 
 // ---------- Save piece ----------
 
-async function uploadAsset(bucket, storagePath, file) {
-  const { error: uploadError } = await supabase.storage.from(bucket).upload(storagePath, file, {
-    upsert: true,
-    contentType: file.type,
-  });
-  if (uploadError) throw uploadError;
-
-  const { data: asset, error: insertError } = await supabase
-    .from("assets")
-    .insert({
-      type: bucket === PDF_BUCKET ? "pdf" : "audio",
-      filename: file.name,
-      storage_path: storagePath,
-      mime_type: file.type,
-      size_bytes: file.size,
-    })
-    .select()
-    .single();
-  if (insertError) throw insertError;
-  return asset;
-}
-
 function uniquePieceId(title) {
   const base = slugify(title) || "stuk";
   let candidate = base;
@@ -844,11 +839,9 @@ saveBtn.addEventListener("click", async () => {
 
     editorStatus.textContent = "Stuk opslaan…";
     if (state.isNew) {
-      const { error } = await supabase.from("pieces").insert(pieceRow);
-      if (error) throw error;
+      await insertPiece(pieceRow);
     } else {
-      const { error } = await supabase.from("pieces").update(pieceRow).eq("id", pieceId);
-      if (error) throw error;
+      await updatePiece(pieceId, pieceRow);
     }
 
     let order = 0;
@@ -856,8 +849,7 @@ saveBtn.addEventListener("click", async () => {
       if (passage.deleted) {
         if (passage.id) {
           editorStatus.textContent = `Passage "${passage.title}" verwijderen…`;
-          const { error } = await supabase.from("passages").delete().eq("id", passage.id);
-          if (error) throw error;
+          await apiDeletePassage(passage.id);
         }
         continue;
       }
@@ -886,11 +878,9 @@ saveBtn.addEventListener("click", async () => {
 
       editorStatus.textContent = `Passage "${passage.title}" opslaan…`;
       if (passage.id) {
-        const { error } = await supabase.from("passages").update(passageRow).eq("id", passage.id);
-        if (error) throw error;
+        await updatePassage(passage.id, passageRow);
       } else {
-        const { error } = await supabase.from("passages").insert(passageRow);
-        if (error) throw error;
+        await insertPassage(passageRow);
       }
     }
 
@@ -905,15 +895,71 @@ saveBtn.addEventListener("click", async () => {
   }
 });
 
-// ---------- Init ----------
+// ---------- Inloggen ----------
 
-async function main() {
+async function showAdmin() {
+  loginView.hidden = true;
+  listView.hidden = false;
+  logoutBtn.hidden = false;
   try {
     await loadAssets();
     await refreshList();
   } catch (err) {
     console.error(err);
     pieceListEl.innerHTML = `<p class="status">Er ging iets mis bij het laden: ${err.message}</p>`;
+  }
+}
+
+function showLogin() {
+  listView.hidden = true;
+  editorView.hidden = true;
+  logoutBtn.hidden = true;
+  loginView.hidden = false;
+  loginPassword.value = "";
+  loginError.hidden = true;
+  loginPassword.focus();
+}
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loginError.hidden = true;
+  const submitBtn = loginForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  try {
+    await login(loginPassword.value);
+    await showAdmin();
+  } catch (err) {
+    loginError.textContent = err.message;
+    loginError.hidden = false;
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+logoutBtn.addEventListener("click", async () => {
+  try {
+    await logout();
+  } catch (err) {
+    console.error(err);
+  }
+  showLogin();
+});
+
+// ---------- Init ----------
+
+async function main() {
+  try {
+    const { loggedIn } = await checkSession();
+    if (loggedIn) {
+      await showAdmin();
+    } else {
+      showLogin();
+    }
+  } catch (err) {
+    console.error(err);
+    showLogin();
+    loginError.textContent = "Kon geen verbinding maken met de server: " + err.message;
+    loginError.hidden = false;
   }
 }
 

@@ -1,2 +1,11 @@
 node_modules/
 .DS_Store
+
+# Echte databasegegevens/wachtwoord-hash — nooit naar git, zie api/config.sample.php
+api/config.php
+
+# Geüploade PDF's/audio (leven op de server zelf, niet in git)
+uploads/pdfs/*
+uploads/audio/*
+!uploads/pdfs/.gitkeep
+!uploads/audio/.gitkeep

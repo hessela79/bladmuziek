@@ -1,0 +1,5 @@
+# config.php en config.sample.php bevatten (of tonen het formaat van)
+# database- en wachtwoordgegevens — nooit direct via de browser opvragen.
+<FilesMatch "^config(\.sample)?\.php$">
+  Require all denied
+</FilesMatch>

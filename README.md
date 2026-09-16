@@ -1,90 +1,117 @@
 # Notenmap — bladmuziek met afspeelknoppen
 
-Een klein, platform-onafhankelijk webproject voor een koor: een overzicht
-waaruit zangers een stuk kiezen, en een bladmuziek-pagina waarin op de
-plek van moeilijke passages een afspeelknop staat. Klik/tik erop en het
-bijbehorende oefenfragment (mp3) speelt af — werkt in elke moderne
-browser, op telefoon, tablet of laptop. Geen app-installatie nodig.
+Een klein webproject voor een koor: een overzicht waaruit zangers een
+stuk kiezen, en een bladmuziek-pagina waarin op de plek van moeilijke
+passages een afspeelknop staat. Klik/tik erop en het bijbehorende
+oefenfragment (mp3/mp4) speelt af. Vanuit een beheerscherm (achter een
+wachtwoord) voeg je zelf stukken, PDF's en oefenfragmenten toe.
 
-Dit is een **demo met 6 fictieve stukken, nagemaakte bladmuziek en
-gesynthetiseerde audiofragmenten** (geen echte partituren of opnames),
-zodat je meteen kunt zien en beluisteren hoe het werkt. Zie hieronder hoe
-je er je eigen stukken, PDF's en mp3's in zet.
+## Architectuur
 
-## Zelf bekijken
+- **Frontend**: statische HTML/CSS/JS (geen build-stap, geen framework).
+  `index.html` (overzicht), `viewer.html` (bladmuziek + afspeelknoppen),
+  `admin.html` (beheer, achter een wachtwoord).
+- **Backend**: een kleine PHP-API in `api/` die met een MariaDB-database
+  praat — draait op gewone PHP+MySQL/MariaDB shared hosting (bijv.
+  mijndomein.nl). Lezen (de site bekijken) is open; toevoegen/wijzigen/
+  verwijderen vereist een ingelogde beheerder.
+- **Bestanden** (PDF's, mp3/mp4-fragmenten) staan gewoon als losse
+  bestanden in `uploads/pdfs/` en `uploads/audio/` op de server, niet in
+  de database.
 
-Puur statische bestanden, geen build-stap, geen server-side code.
+## Lokaal draaien
+
+Nodig: PHP 8+ met de `pdo_mysql`-extensie, en een MariaDB/MySQL-server.
+
+1. Database aanmaken en het schema toepassen:
+   ```bash
+   mysql -u root -e "CREATE DATABASE notenmap CHARACTER SET utf8mb4;"
+   mysql -u root notenmap < sql/mariadb_schema.sql
+   ```
+2. `api/config.sample.php` kopiëren naar `api/config.php` en invullen
+   (databasegegevens + een wachtwoord-hash voor het beheerscherm — zie de
+   uitleg bovenin dat bestand). **`api/config.php` staat in `.gitignore`
+   en mag nooit in git terechtkomen.**
+3. Server starten vanaf de projectmap:
+   ```bash
+   php -S localhost:8080
+   ```
+4. Open `http://localhost:8080` voor het overzicht, of
+   `http://localhost:8080/admin.html` om in te loggen en stukken toe te
+   voegen.
+
+## Hosten op shared hosting (bijv. mijndomein.nl)
+
+1. Maak een MariaDB/MySQL-database aan via het hostingpaneel en pas
+   `sql/mariadb_schema.sql` toe (bijv. via phpMyAdmin).
+2. Upload de hele projectmap naar je webruimte (FTP of bestandsbeheer in
+   het paneel).
+3. Maak op de server zelf `api/config.php` aan (kopie van
+   `api/config.sample.php`, ingevuld met je eigen databasegegevens en
+   wachtwoord-hash). Upload dit bestand apart — het staat bewust niet in
+   git.
+4. Zorg dat `uploads/pdfs/` en `uploads/audio/` beschrijfbaar zijn voor
+   PHP (standaard rechten zijn meestal genoeg).
+5. Open `jouwdomein.nl/admin.html`, log in en voeg je eerste stuk toe.
+
+`api/.htaccess` en `uploads/.htaccess` beveiligen `config.php` en
+voorkomen dat een geüpload bestand ooit als PHP-script wordt uitgevoerd
+— dit werkt alleen op een Apache-server (zoals gangbare shared hosting),
+niet met `php -S` lokaal.
+
+## Overkomen van bestaande Supabase-data
+
+Als je eerder de Supabase-versie van deze app gebruikte: draai
+`scripts/migrate_supabase_to_mariadb.mjs` (Node 18+, geen npm-install
+nodig) nádat de nieuwe site live staat. Vul bovenin het script je eigen
+`TARGET_URL` en beheerderswachtwoord in, en draai:
 
 ```bash
-python3 -m http.server 8080
-# of: npx serve
+node scripts/migrate_supabase_to_mariadb.mjs
 ```
 
-Open daarna `http://localhost:8080`.
-
-(Rechtstreeks openen als `file://` werkt niet — de pagina's halen data op
-via `fetch`, en dat blokkeren browsers vanaf het bestandssysteem. Een
-simpele static-file server is genoeg, geen speciale hosting vereist.)
+Dit zet alle stukken, passages en bestanden (PDF's + audio) over naar de
+nieuwe backend.
 
 ## Schermen
 
-- **`index.html`** — overzicht van alle stukken (kaarten met titel,
-  arrangeur, genre, stemgroepen en aantal oefenpassages). Klikken op een
-  kaart gaat naar `viewer.html?stuk=<id>`.
+- **`index.html`** — overzicht van alle *zichtbare* stukken (kaarten met
+  titel, arrangeur, genre, stemgroepen en aantal oefenpassages). Klikken
+  op een kaart gaat naar `viewer.html?stuk=<id>`.
 - **`viewer.html`** — toont de bladmuziek van het gekozen stuk met
-  klikbare afspeelknoppen op de gemarkeerde passages, plus een vaste
-  "nu speelt"-balk onderin en een link terug naar het overzicht.
+  klikbare, gekleurde afspeelknoppen op de gemarkeerde passages, plus een
+  vaste "nu speelt"-balk (vorige/volgende, 5s terug/vooruit, snelheid) en
+  een link terug naar het overzicht.
+- **`admin.html`** — beheer (achter een wachtwoord): stukken toevoegen/
+  bewerken/verwijderen/herordenen, per stuk zichtbaarheid instellen,
+  passages tekenen op de PDF met titel, opmerking, kleur en optioneel een
+  oefenfragment, en een bibliotheek van alle geüploade bestanden.
 
-## Hoe het werkt
+## Belangrijkste bestanden
 
-- `data/pieces.json` — de lijst van alle stukken: titel, arrangeur,
-  genre, stemgroepen, aantal oefenpassages, en waar de PDF en de
-  passage-data van dat stuk staan.
-- `data/passages/<stuk-id>.json` — per stuk: voor elke passage het
-  audiobestand en de positie op de pagina (paginanummer + genormaliseerde
-  x/y/breedte/hoogte, 0–1, oorsprong linksboven).
-- `assets/pdf/<stuk-id>.pdf` — de bladmuziek van dat stuk.
-- `assets/audio/<stuk-id>/*.mp3` — de oefenfragmenten van dat stuk.
-- `js/home.js` — bouwt het kaartenoverzicht op uit `data/pieces.json`.
-- `js/viewer.js` — leest `?stuk=` uit de URL, rendert de PDF pagina voor
-  pagina op een `<canvas>` (met [pdf.js](https://mozilla.github.io/pdf.js/),
-  lokaal meegeleverd in `js/vendor/pdfjs/` zodat er geen externe CDN nodig
-  is) en legt daarover doorzichtige knoppen op basis van de passage-data.
-  Klikken speelt de mp3 af via de standaard HTML5 `<audio>`-API; nogmaals
-  klikken stopt 'm.
-- `css/style.css` — het gedeelde, muzikale uiterlijk (perkament/gouden
-  tinten, notenbalklijnen als decoratie), met automatische donkere modus
-  via `prefers-color-scheme`.
-
-Omdat de knop-posities in procenten van de paginabreedte/-hoogte staan,
-schalen ze automatisch mee als de pagina op een kleiner scherm smaller
-wordt weergegeven.
-
-## Je eigen stukken, bladmuziek en fragmenten gebruiken
-
-1. Vervang de PDF's in `assets/pdf/` en de mp3's in `assets/audio/<id>/`
-   door je eigen bestanden.
-2. Bepaal per moeilijke passage op welke pagina en op welke plek (in
-   procenten van de paginabreedte/-hoogte, vanaf linksboven) de knop moet
-   komen — zie de uitleg in de vorige versie van dit document, of voeg
-   tijdelijk een `console.log` toe in `js/viewer.js` om bij een klik de
-   percentages af te lezen.
-3. Werk `data/pieces.json` en `data/passages/<id>.json` bij met je eigen
-   stukken en passages (zelfde structuur als de bestaande voorbeelden).
-4. Vernieuw de pagina — alles verschijnt automatisch, de JS-bestanden
-   hoeven niet aangepast te worden.
-
-## Publiceren
-
-Puur statische bestanden (HTML/CSS/JS/PDF/mp3), dus te hosten op elk
-platform dat statische sites serveert: GitHub Pages, Netlify, Vercel, of
-een map op een eigen webserver.
+- `js/apiClient.js` — alle communicatie met de PHP-API (lezen is open,
+  schrijven vereist inloggen; de browser stuurt het sessie-cookie vanzelf
+  mee omdat alles op hetzelfde domein draait).
+- `api/*.php` — de backend: `pieces.php`, `passages.php`, `assets.php`,
+  `upload.php`, `reorder_pieces.php` (data), en `login.php`/`logout.php`/
+  `session.php`/`auth.php` (inloggen voor het beheerscherm).
+- `sql/mariadb_schema.sql` — het databaseschema.
+- `js/home.js` / `js/viewer.js` / `js/admin.js` — respectievelijk het
+  overzicht, de bladmuziek-viewer (met [pdf.js](https://mozilla.github.io/pdf.js/),
+  lokaal meegeleverd in `js/vendor/pdfjs/`) en het beheerscherm.
+- `js/export.js` — bouwt een zelfstandig HTML-bestand van één stuk (PDF-
+  pagina's en audio ingebed als base64), te downloaden en bijv. op Google
+  Drive te zetten. De exportknop staat momenteel verborgen in de viewer
+  (zie `viewer.html`) — de functionaliteit zelf werkt nog gewoon.
+- `css/style.css` / `css/admin.css` — het muzikale uiterlijk (perkament/
+  gouden tinten), met automatische donkere modus via
+  `prefers-color-scheme`.
 
 ## Hoe de demo-inhoud is gemaakt
 
-`scripts/generate_content.py` genereert voor alle 6 voorbeeldstukken de
-nagemaakte bladmuziek-PDF's, de gesynthetiseerde mp3's en de bijbehorende
-`data/pieces.json` + `data/passages/*.json`. Alleen voor deze demo — voor
-je eigen koor gebruik je gewoon je eigen PDF-export en ingezongen
-opnames. Vereist `reportlab` en `lameenc` (`pip install reportlab
-lameenc`).
+`scripts/generate_content.py` genereert nagemaakte bladmuziek-PDF's en
+gesynthetiseerde mp3's voor de voorbeeldstukken (`data/pieces.json` +
+`data/passages/*.json`, gebruikt door het oude `scripts/
+migrate_to_supabase.mjs`). Alleen relevant als je opnieuw demo-inhoud
+wilt genereren — voor je eigen koor gebruik je gewoon je eigen PDF-export
+en ingezongen opnames via het beheerscherm.

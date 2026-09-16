@@ -1,3 +1,25 @@
+.login-card {
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 32px;
+  max-width: 360px;
+  margin: 60px auto 0;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-card #login-error {
+  color: var(--stop-icon-bg, #b3432f);
+}
+
 .admin-main {
   max-width: 1100px;
   margin: 0 auto;

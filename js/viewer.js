@@ -1,5 +1,5 @@
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
-import { supabase, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor } from "./supabaseClient.js";
+import { getPiece, listPassages, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor } from "./apiClient.js";
 import { exportStandaloneHtml } from "./export.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -256,14 +256,10 @@ async function main() {
   }
 
   try {
-    const { data: piece, error: pieceError } = await supabase
-      .from("pieces")
-      .select("*, pdf_asset:assets(storage_path)")
-      .eq("id", pieceId)
-      .maybeSingle();
-
-    if (pieceError) throw pieceError;
-    if (!piece) {
+    let piece;
+    try {
+      piece = await getPiece(pieceId);
+    } catch {
       statusEl.textContent = "Dit stuk is niet gevonden.";
       return;
     }
@@ -273,13 +269,7 @@ async function main() {
     titleEl.textContent = piece.title;
     subtitleEl.textContent = `${piece.composer || ""} · ${piece.voices.map((v) => VOICE_LABELS[v] || v).join("")}${piece.solo ? " + solo" : ""}`;
 
-    const { data: passages, error: passagesError } = await supabase
-      .from("passages")
-      .select("*, audio_asset:assets(storage_path)")
-      .eq("piece_id", pieceId)
-      .order("sort_order", { ascending: true });
-
-    if (passagesError) throw passagesError;
+    const passages = await listPassages(pieceId);
 
     allPassages = passages.map((p) => ({
       ...p,

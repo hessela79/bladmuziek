@@ -1,0 +1,8 @@
+# Bestanden in deze map zijn alleen data (PDF's/audio) — nooit uitvoeren
+# als script, ook niet als een geüpload bestand een rare extensie heeft.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|php\d)$">
+  Require all denied
+</FilesMatch>

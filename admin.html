@@ -21,12 +21,30 @@
       </svg>
       <div class="app-logo-text serif">Notenmap · beheer</div>
     </div>
-    <a href="index.html" class="back-link">Naar het overzicht</a>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button id="logout-btn" class="back-link" style="background:none;border:none;cursor:pointer;font:inherit;" hidden>Uitloggen</button>
+      <a href="index.html" class="back-link">Naar het overzicht</a>
+    </div>
   </header>
 
   <main class="admin-main">
 
-    <section id="list-view">
+    <section id="login-view" hidden>
+      <div class="login-card">
+        <h1 class="serif admin-heading">Inloggen</h1>
+        <p class="status">Log in om het beheerscherm te gebruiken.</p>
+        <form id="login-form">
+          <label class="field">
+            <span>Wachtwoord</span>
+            <input id="login-password" type="password" required autocomplete="current-password" />
+          </label>
+          <p id="login-error" class="status" hidden></p>
+          <button type="submit" class="btn btn-primary">Inloggen</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="list-view" hidden>
       <div class="admin-toolbar">
         <h1 class="serif admin-heading">Stukken</h1>
         <button id="new-piece-btn" class="btn btn-primary">+ Nieuw stuk</button>
@@ -160,7 +178,6 @@
     </div>
   </div>
 
-  <script src="js/vendor/supabase/supabase.js"></script>
   <script src="js/admin.js" type="module"></script>
 </body>
 </html>
