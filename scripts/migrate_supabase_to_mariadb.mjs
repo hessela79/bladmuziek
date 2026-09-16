@@ -150,6 +150,7 @@ async function main() {
     throw new Error("Vul eerst TARGET_URL en TARGET_ADMIN_PASSWORD bovenaan dit script in.");
   }
 
+  console.log(`Doel: ${TARGET_URL}`);
   await login();
 
   console.log("Stukken en passages ophalen uit Supabase…");
@@ -166,5 +167,18 @@ async function main() {
 main().catch((err) => {
   console.error("\nMigratie gestopt door een fout:");
   console.error(err.message);
+  if (err.cause) {
+    console.error("Onderliggende oorzaak:", err.cause.message || err.cause);
+  }
+  if (err.message === "fetch failed") {
+    console.error(
+      "\nDit betekent dat de netwerkverbinding zelf mislukte (niet een fout van de server).\n" +
+        "Controleer:\n" +
+        `  - Klopt TARGET_URL precies? Nu ingesteld als: ${TARGET_URL}\n` +
+        "  - Is die URL nu gewoon te openen in je browser?\n" +
+        "  - Staat er 'https://' voor (of juist 'http://' als de site nog geen SSL heeft)?\n" +
+        "  - Geen slash '/' aan het eind van TARGET_URL?"
+    );
+  }
   process.exit(1);
 });
