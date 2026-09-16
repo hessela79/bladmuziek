@@ -1,0 +1,5 @@
+# Sommige Apache-hosting kent van zichzelf geen bestandstype voor .mjs
+# (ES module JavaScript, gebruikt door pdf.js). Zonder deze regel weigert
+# de browser zulke bestanden uit te voeren, waardoor viewer.js/admin.js
+# stil blijven staan zonder zichtbare foutmelding.
+AddType text/javascript .mjs
