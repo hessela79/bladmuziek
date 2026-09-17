@@ -205,30 +205,41 @@ function renderPieceList(counts) {
     const row = document.createElement("div");
     row.className = "admin-piece-row" + (piece.visible === false ? " hidden-piece" : "");
     row.draggable = true;
+    const isVisible = piece.visible !== false;
     row.innerHTML = `
       <div class="drag-handle" title="Sleep om de volgorde te wijzigen">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
       </div>
+      <div class="piece-swatch"></div>
       <div style="flex:1;min-width:0;">
         <div class="admin-piece-row-title serif">${piece.title}</div>
         <div class="admin-piece-row-meta">${piece.composer || ""} · ${piece.genre || ""} · ${counts.get(piece.id) || 0} passage(s)</div>
       </div>
       <div class="admin-piece-row-actions">
-        <label class="field-checkbox visibility-toggle" title="Zichtbaar in het overzicht voor gebruikers">
-          <input type="checkbox" class="visibility-checkbox" ${piece.visible === false ? "" : "checked"} />
-          Zichtbaar
+        <label class="visibility-toggle" title="Zichtbaar in het overzicht voor gebruikers">
+          <span class="visibility-toggle-label">${isVisible ? "Zichtbaar" : "Verborgen"}</span>
+          <span class="switch">
+            <input type="checkbox" class="visibility-checkbox" ${isVisible ? "checked" : ""} />
+            <span class="switch-track"></span>
+          </span>
         </label>
-        <button class="btn btn-secondary btn-small" data-action="edit">Bewerken</button>
-        <button class="btn btn-danger btn-small" data-action="delete">Verwijderen</button>
+        <button class="icon-btn" data-action="edit" title="Bewerken" aria-label="Bewerken">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn danger" data-action="delete" title="Verwijderen" aria-label="Verwijderen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
       </div>
     `;
     row.querySelector('[data-action="edit"]').addEventListener("click", () => openEditor(piece));
     row.querySelector('[data-action="delete"]').addEventListener("click", () => deletePiece(piece));
+    const visibilityLabel = row.querySelector(".visibility-toggle-label");
     row.querySelector(".visibility-checkbox").addEventListener("change", async (e) => {
       const newVisible = e.target.checked;
       const previous = piece.visible !== false;
       piece.visible = newVisible;
       row.classList.toggle("hidden-piece", !newVisible);
+      visibilityLabel.textContent = newVisible ? "Zichtbaar" : "Verborgen";
       try {
         await updatePiece(piece.id, { visible: newVisible });
       } catch (err) {
@@ -236,6 +247,7 @@ function renderPieceList(counts) {
         piece.visible = previous;
         e.target.checked = previous;
         row.classList.toggle("hidden-piece", !previous);
+        visibilityLabel.textContent = previous ? "Zichtbaar" : "Verborgen";
       }
     });
 
