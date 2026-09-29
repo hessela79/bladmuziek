@@ -39,6 +39,14 @@ naar hjk.hartvolmuziek.nl geüpload zijn:
   weg (productiedomein staat op de uitzonderingslijst), dus dit hoeft
   qua urgentie niet snel live — het is puur bedoeld om de Supabase/
   GitHub Pages-testomgeving af te schermen.
+- `f5b4e02` — **Nieuwe functie + database-migratie**: een passage kan nu
+  uit meerdere vakken (rechthoeken) bestaan, bijv. voor een passage die
+  over een pagina-einde of twee regels loopt. Vereist bij het live
+  zetten: eerst `sql/002_passage_rects.sql` op de productie-database
+  draaien (zet bestaande passages automatisch om naar hun eerste vak —
+  geen dataverlies), dán pas de nieuwe bestanden uploaden. Lokaal
+  end-to-end getest (aanmaken/bewerken/verwijderen van vakken, viewer,
+  cascade-verwijdering) met Playwright vóór deze commit.
 
 _Nieuwe wijzigingen die je vanmiddag via Supabase/GitHub Pages laat
 testen, komen hieronder bij te staan zodra ze gepusht worden._
