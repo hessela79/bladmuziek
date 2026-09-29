@@ -12,6 +12,7 @@ function passage_out(array $row, array $rects): array
         'audio_asset_id' => $row['audio_asset_id'],
         'audio_asset' => $row['audio_storage_path'] !== null ? ['storage_path' => $row['audio_storage_path']] : null,
         'color' => $row['color'],
+        'voices' => $row['voices'] === '' || $row['voices'] === null ? [] : explode(',', $row['voices']),
         'sort_order' => (int) $row['sort_order'],
         'created_at' => $row['created_at'],
         'rects' => array_map(function (array $r): array {
@@ -111,13 +112,14 @@ if ($method === 'POST') {
     if (count($rects) === 0) {
         fail('Minstens één vak (rechthoek) op de bladmuziek is verplicht.', 422);
     }
+    $voices = is_array($input['voices'] ?? null) ? $input['voices'] : [];
     $id = uuidv4();
 
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare(
-            'INSERT INTO passages (id, piece_id, title, description, audio_asset_id, color, sort_order)
-             VALUES (:id, :piece_id, :title, :description, :audio_asset_id, :color, :sort_order)'
+            'INSERT INTO passages (id, piece_id, title, description, audio_asset_id, color, voices, sort_order)
+             VALUES (:id, :piece_id, :title, :description, :audio_asset_id, :color, :voices, :sort_order)'
         );
         $stmt->execute([
             'id' => $id,
@@ -126,6 +128,7 @@ if ($method === 'POST') {
             'description' => $input['description'] ?? '',
             'audio_asset_id' => $input['audio_asset_id'] ?? null,
             'color' => $color,
+            'voices' => implode(',', $voices),
             'sort_order' => (int) ($input['sort_order'] ?? 0),
         ]);
         replace_rects($pdo, $id, $rects);
@@ -152,12 +155,13 @@ if ($method === 'PUT') {
     if (count($rects) === 0) {
         fail('Minstens één vak (rechthoek) op de bladmuziek is verplicht.', 422);
     }
+    $voices = is_array($input['voices'] ?? null) ? $input['voices'] : [];
 
     $pdo->beginTransaction();
     try {
         $stmt = $pdo->prepare(
             'UPDATE passages SET title = :title, description = :description, audio_asset_id = :audio_asset_id,
-             color = :color, sort_order = :sort_order
+             color = :color, voices = :voices, sort_order = :sort_order
              WHERE id = :id'
         );
         $stmt->execute([
@@ -165,6 +169,7 @@ if ($method === 'PUT') {
             'description' => $input['description'] ?? '',
             'audio_asset_id' => $input['audio_asset_id'] ?? null,
             'color' => $color,
+            'voices' => implode(',', $voices),
             'sort_order' => (int) ($input['sort_order'] ?? 0),
             'id' => $id,
         ]);

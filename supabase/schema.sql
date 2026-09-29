@@ -46,6 +46,10 @@ create table if not exists passages (
   description text,
   audio_asset_id uuid references assets (id) on delete set null,
   color text not null default 'goud' check (color in ('geel', 'groen', 'rood', 'blauw', 'bruin', 'goud')),
+  -- Stemgroepen waar deze passage voor bedoeld is — bepaalt automatisch
+  -- welke stemgroepen op het stuk zelf actief staan (unie van alle
+  -- niet-verwijderde passages), zie pieces.voices hierboven.
+  voices text[] not null default '{}',
   sort_order int not null default 0,
   created_at timestamptz not null default now()
 );

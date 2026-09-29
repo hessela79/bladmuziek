@@ -81,6 +81,7 @@ const pfCancel = document.getElementById("pf-cancel");
 const pfSave = document.getElementById("pf-save");
 const pfRectsList = document.getElementById("pf-rects-list");
 const pfAddRectBtn = document.getElementById("pf-add-rect-btn");
+const pfVoices = Array.from(document.querySelectorAll(".pf-voice"));
 const pfColorSwatches = Array.from(document.querySelectorAll("#pf-color-swatches .color-swatch"));
 
 const PASSAGE_COLORS = ["geel", "groen", "rood", "blauw", "bruin", "goud"];
@@ -455,7 +456,6 @@ async function openEditor(piece) {
     fGenre.value = piece.genre || "";
     fSolo.checked = !!piece.solo;
     fVisible.checked = piece.visible !== false;
-    for (const cb of fVoices) cb.checked = piece.voices.includes(cb.value);
     state.pdfAssetId = piece.pdf_asset_id;
     fPdfSelect.value = piece.pdf_asset_id || "";
 
@@ -468,6 +468,7 @@ async function openEditor(piece) {
       audioAssetId: p.audio_asset_id,
       audioFile: null,
       color: p.color || DEFAULT_PASSAGE_COLOR,
+      voices: p.voices || [],
       sortOrder: p.sort_order,
       deleted: false,
       rects: (p.rects || []).map((r) => ({
@@ -490,7 +491,6 @@ async function openEditor(piece) {
     fGenre.value = "";
     fSolo.checked = false;
     fVisible.checked = true;
-    for (const cb of fVoices) cb.checked = false;
     fPdfSelect.value = "";
     fPdfUpload.value = "";
     pdfContainer.innerHTML = `<p class="status">Kies of upload eerst een PDF.</p>`;
@@ -788,6 +788,7 @@ function openPassageModal(key, { keepDraft = false } = {}) {
       pfNoAudio.checked = !passage.audioAssetId && !passage.audioFile;
       pfDelete.hidden = false;
       setSelectedColor(passage.color || DEFAULT_PASSAGE_COLOR);
+      for (const cb of pfVoices) cb.checked = (passage.voices || []).includes(cb.value);
       draftRects = passage.rects.map((r) => ({ ...r }));
     } else {
       passageModalTitle.textContent = "Nieuwe passage";
@@ -798,6 +799,7 @@ function openPassageModal(key, { keepDraft = false } = {}) {
       pfNoAudio.checked = false;
       pfDelete.hidden = true;
       setSelectedColor(DEFAULT_PASSAGE_COLOR);
+      for (const cb of pfVoices) cb.checked = false;
       // draftRects bevat op dit moment al het zojuist getekende eerste vak
       // (gezet door de pointerup-handler vóór deze aanroep).
     }
@@ -866,12 +868,14 @@ pfSave.addEventListener("click", async () => {
   const audioFile = pfNoAudio.checked ? null : pfAudioUpload.files[0] || null;
   const audioAssetId = pfNoAudio.checked ? null : pfAudioSelect.value || null;
   const rects = draftRects.map((r) => ({ ...r }));
+  const voices = pfVoices.filter((cb) => cb.checked).map((cb) => cb.value);
 
   if (activePassageKey) {
     const passage = state.passages.find((p) => p._key === activePassageKey);
     passage.title = title;
     passage.description = pfDescription.value.trim();
     passage.color = selectedColor;
+    passage.voices = voices;
     passage.rects = rects;
     if (pfNoAudio.checked) {
       passage.audioFile = null;
@@ -892,6 +896,7 @@ pfSave.addEventListener("click", async () => {
       audioAssetId: audioFile ? null : audioAssetId,
       audioFile,
       color: selectedColor,
+      voices,
       rects,
       sortOrder: state.passages.length,
       deleted: false,
@@ -917,7 +922,26 @@ pfDelete.addEventListener("click", () => {
 
 // ---------- Passage list (onder de editor) ----------
 
+// De stemgroepen van het stuk zelf worden niet los ingesteld, maar volgen
+// automatisch uit de stemgroepen die per passage gekozen zijn (unie van
+// alle niet-verwijderde passages) — vandaar dat de f-voice-checkboxes
+// hierboven in het formulier disabled staan.
+function activePieceVoices() {
+  const active = new Set();
+  for (const passage of state.passages) {
+    if (passage.deleted) continue;
+    for (const v of passage.voices || []) active.add(v);
+  }
+  return active;
+}
+
+function syncPieceVoicesFromPassages() {
+  const active = activePieceVoices();
+  for (const cb of fVoices) cb.checked = active.has(cb.value);
+}
+
 function renderPassageList() {
+  syncPieceVoicesFromPassages();
   const visible = state.passages.filter((p) => !p.deleted);
   if (visible.length === 0) {
     passageListEl.innerHTML = `<p class="status">Nog geen passages.</p>`;
@@ -982,7 +1006,11 @@ saveBtn.addEventListener("click", async () => {
       pdfAssetId = asset.id;
     }
 
-    const voices = fVoices.filter((cb) => cb.checked).map((cb) => cb.value);
+    // Stemgroepen van het stuk volgen automatisch uit de passages (niet uit
+    // de - disabled - f-voice-checkboxes, al zijn die door
+    // syncPieceVoicesFromPassages() sowieso in dezelfde staat).
+    const activeVoices = activePieceVoices();
+    const voices = fVoices.map((cb) => cb.value).filter((v) => activeVoices.has(v));
     const pieceRow = {
       id: pieceId,
       title,
@@ -1028,6 +1056,7 @@ saveBtn.addEventListener("click", async () => {
         description: passage.description,
         audio_asset_id: audioAssetId,
         color: passage.color || DEFAULT_PASSAGE_COLOR,
+        voices: passage.voices || [],
         sort_order: order++,
         rects: passage.rects.map((r) => ({
           page: r.page,

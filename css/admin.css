@@ -548,6 +548,22 @@
   cursor: pointer;
 }
 
+/* Stuk-niveau: alleen-lezen weergave — wordt automatisch bepaald uit de
+   stemgroepen van de passages, dus niet zelf aan te klikken. */
+.voice-checkboxes.readonly label,
+.voice-checkboxes.readonly label:hover,
+.voice-checkboxes.readonly input {
+  cursor: default;
+}
+
+.voice-checkboxes.readonly label:hover {
+  border-color: var(--line);
+}
+
+.voice-checkboxes.readonly label:has(input:checked):hover {
+  border-color: var(--gold);
+}
+
 .editor-pdf .pdf-container {
   max-width: 100%;
   padding: 0;

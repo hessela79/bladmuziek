@@ -47,6 +47,10 @@ CREATE TABLE IF NOT EXISTS passages (
   description TEXT,
   audio_asset_id CHAR(36),
   color VARCHAR(20) NOT NULL DEFAULT 'goud',
+  -- Komma-gescheiden stemgroepletters waar deze passage voor bedoeld is
+  -- (bijv. "A" of "S,A") — bepaalt automatisch welke stemgroepen op het
+  -- stuk zelf actief staan, zie pieces.voices hierboven.
+  voices VARCHAR(32) NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (piece_id) REFERENCES pieces (id) ON DELETE CASCADE,

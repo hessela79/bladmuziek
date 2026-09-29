@@ -100,11 +100,12 @@
           </label>
           <div class="field">
             <span>Stemgroepen</span>
-            <div class="voice-checkboxes">
-              <label><input type="checkbox" value="S" class="f-voice" /> Sopraan</label>
-              <label><input type="checkbox" value="A" class="f-voice" /> Alt</label>
-              <label><input type="checkbox" value="B" class="f-voice" /> Bariton</label>
+            <div class="voice-checkboxes readonly">
+              <label><input type="checkbox" value="S" class="f-voice" disabled /> Sopraan</label>
+              <label><input type="checkbox" value="A" class="f-voice" disabled /> Alt</label>
+              <label><input type="checkbox" value="B" class="f-voice" disabled /> Bariton</label>
             </div>
+            <div class="field-or">wordt automatisch bepaald door de stemgroepen die je bij de passages hieronder kiest</div>
             <label class="check-field" style="margin-top:6px;">
               <span class="check-box">
                 <input type="checkbox" id="f-solo" />
@@ -183,6 +184,15 @@
           <button type="button" class="color-swatch color-bruin" data-color="bruin" title="Bruin"></button>
           <button type="button" class="color-swatch color-goud" data-color="goud" title="Goud"></button>
         </div>
+      </div>
+      <div class="field">
+        <span>Stemgroepen</span>
+        <div class="voice-checkboxes">
+          <label><input type="checkbox" value="S" class="pf-voice" /> Sopraan</label>
+          <label><input type="checkbox" value="A" class="pf-voice" /> Alt</label>
+          <label><input type="checkbox" value="B" class="pf-voice" /> Bariton</label>
+        </div>
+        <div class="field-or">optioneel — bepaalt mee welke stemgroepen voor het hele stuk actief staan</div>
       </div>
       <div class="field">
         <span>Vakken op de bladmuziek</span>
