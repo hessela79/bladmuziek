@@ -3,8 +3,9 @@
 // importeren allemaal alleen van dit bestand, en weten niet welke
 // backend er onder zit).
 //
-// - Productiedomein(en) hieronder in PRODUCTION_HOSTS -> js/backends/mariadb.js
-//   (de eigen PHP-API op MariaDB, met een echt inlogscherm voor beheer).
+// - Productiedomein(en) (zie js/prodHosts.js, gedeeld met js/devGate.js)
+//   -> js/backends/mariadb.js (de eigen PHP-API op MariaDB, met een echt
+//   inlogscherm voor beheer).
 // - Alle andere hostnamen (GitHub Pages, localhost, een preview-domein, …)
 //   -> js/backends/supabase.js (development/testomgeving; RLS staat open,
 //   dus geen login nodig).
@@ -13,7 +14,7 @@
 // handig om lokaal een van beide paden te forceren:
 //   ?backend=mariadb   of   ?backend=supabase
 
-const PRODUCTION_HOSTS = ["hjk.hartvolmuziek.nl"];
+const PRODUCTION_HOSTS = window.NOTENMAP_PRODUCTION_HOSTS || ["hjk.hartvolmuziek.nl"];
 
 function pickBackend() {
   const forced = new URLSearchParams(location.search).get("backend");
