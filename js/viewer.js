@@ -45,10 +45,12 @@ let currentPiece = null;
 // ---------- Afspeelbalk ----------
 
 function setPassageButtonState(passage, playing) {
-  if (!passage._button || !passage.hasAudio) return;
-  passage._button.classList.toggle("playing", playing);
-  const icon = passage._button.querySelector(".play-icon");
-  if (icon) icon.innerHTML = playing ? STOP_ICON : PLAY_ICON;
+  if (!passage.hasAudio) return;
+  for (const button of passage._buttons) {
+    button.classList.toggle("playing", playing);
+    const icon = button.querySelector(".play-icon");
+    if (icon) icon.innerHTML = playing ? STOP_ICON : PLAY_ICON;
+  }
 }
 
 function updateNavButtons() {
@@ -84,8 +86,8 @@ function openPassage(index) {
   playerBar.hidden = false;
   updateNavButtons();
 
-  if (passage._button) {
-    passage._button.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (passage._buttons[0]) {
+    passage._buttons[0].scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   if (passage.hasAudio) {
@@ -181,19 +183,19 @@ function buildPageWrapper(pageNumber) {
   return { wrapper, canvas, overlay };
 }
 
-function addPassageButton(overlay, passage, index) {
+function addPassageButton(overlay, passage, rect, index) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "passage-button color-" + (passage.color || "goud") + (passage.hasAudio ? "" : " note-only");
-  button.style.left = `${passage.x_pct * 100}%`;
-  button.style.top = `${passage.y_pct * 100}%`;
-  button.style.width = `${passage.width_pct * 100}%`;
-  button.style.height = `${passage.height_pct * 100}%`;
+  button.style.left = `${rect.x_pct * 100}%`;
+  button.style.top = `${rect.y_pct * 100}%`;
+  button.style.width = `${rect.width_pct * 100}%`;
+  button.style.height = `${rect.height_pct * 100}%`;
   button.setAttribute("aria-label", passage.hasAudio ? `Afspelen: ${passage.title}` : `Opmerking: ${passage.title}`);
   button.title = passage.title;
   button.innerHTML = `<span class="play-icon">${passage.hasAudio ? PLAY_ICON : NOTE_ICON}</span>`;
 
-  passage._button = button;
+  passage._buttons.push(button);
   button.addEventListener("click", () => togglePassage(index));
   overlay.appendChild(button);
 }
@@ -223,8 +225,8 @@ async function renderPage(pdf, pageNumber, passagesByPage) {
   await page.render({ canvasContext: ctx, viewport }).promise;
 
   const entries = passagesByPage.get(pageNumber) || [];
-  for (const { passage, index } of entries) {
-    addPassageButton(overlay, passage, index);
+  for (const { passage, rect, index } of entries) {
+    addPassageButton(overlay, passage, rect, index);
   }
 }
 
@@ -275,17 +277,22 @@ async function main() {
       ...p,
       hasAudio: !!p.audio_asset,
       audioUrl: p.audio_asset ? publicUrlFor(AUDIO_BUCKET, p.audio_asset.storage_path) : null,
-      _button: null,
+      _buttons: [],
     }));
 
     const pdfUrl = publicUrlFor(PDF_BUCKET, piece.pdf_asset.storage_path);
     const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
 
+    // Een passage kan uit meerdere vakken bestaan (bijv. over twee regels of
+    // een pagina-einde) — elk vak krijgt zijn eigen klikbare knop, maar ze
+    // delen dezelfde afspeel-index (index in allPassages).
     const passagesByPage = new Map();
     allPassages.forEach((passage, index) => {
-      const list = passagesByPage.get(passage.page) || [];
-      list.push({ passage, index });
-      passagesByPage.set(passage.page, list);
+      for (const rect of passage.rects) {
+        const list = passagesByPage.get(rect.page) || [];
+        list.push({ passage, rect, index });
+        passagesByPage.set(rect.page, list);
+      }
     });
 
     statusEl.hidden = true;

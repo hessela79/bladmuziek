@@ -97,28 +97,61 @@ export async function reorderPieces(ids) {
 }
 
 // ---------- Passages ----------
+//
+// Een passage kan uit meerdere vakken (rechthoeken op de bladmuziek)
+// bestaan — bijv. een passage die over twee regels of een pagina-einde
+// loopt — en die staan daarom in een eigen tabel (passage_rects) in
+// plaats van rechtstreeks op passages.
+
+const PASSAGE_SELECT =
+  "*, audio_asset:assets(storage_path), rects:passage_rects(page, x_pct, y_pct, width_pct, height_pct, sort_order)";
 
 export async function listPassages(pieceId) {
   return unwrap(
     await client
       .from("passages")
-      .select("*, audio_asset:assets(storage_path)")
+      .select(PASSAGE_SELECT)
       .eq("piece_id", pieceId)
       .order("sort_order", { ascending: true })
+      .order("sort_order", { ascending: true, foreignTable: "passage_rects" })
   );
 }
 
 export async function listAllPassages() {
-  return unwrap(await client.from("passages").select("*, audio_asset:assets(storage_path)"));
+  return unwrap(
+    await client
+      .from("passages")
+      .select(PASSAGE_SELECT)
+      .order("sort_order", { ascending: true, foreignTable: "passage_rects" })
+  );
+}
+
+async function replaceRects(passageId, rects) {
+  unwrap(await client.from("passage_rects").delete().eq("passage_id", passageId));
+  if (rects.length === 0) return;
+  const rows = rects.map((r, i) => ({
+    passage_id: passageId,
+    page: r.page,
+    x_pct: r.x_pct,
+    y_pct: r.y_pct,
+    width_pct: r.width_pct,
+    height_pct: r.height_pct,
+    sort_order: i,
+  }));
+  unwrap(await client.from("passage_rects").insert(rows));
 }
 
 export async function insertPassage(row) {
-  unwrap(await client.from("passages").insert(row));
-  return { ok: true };
+  const { rects, ...passageFields } = row;
+  const passage = unwrap(await client.from("passages").insert(passageFields).select().single());
+  await replaceRects(passage.id, rects || []);
+  return { ok: true, id: passage.id };
 }
 
 export async function updatePassage(id, row) {
-  unwrap(await client.from("passages").update(row).eq("id", id));
+  const { rects, ...passageFields } = row;
+  unwrap(await client.from("passages").update(passageFields).eq("id", id));
+  await replaceRects(id, rects || []);
   return { ok: true };
 }
 

@@ -37,19 +37,29 @@ function buildDocument(piece, pages, passages) {
     .filter(Boolean)
     .join(" · ");
 
+  // Een passage kan uit meerdere vakken bestaan (bijv. over twee regels of
+  // een pagina-einde) — elk vak wordt zijn eigen knop, maar ze delen
+  // dezelfde data-index (en dus dezelfde afspeel-state hieronder).
+  const buttons = [];
+  for (const p of passages) {
+    for (const rect of p.rects) {
+      buttons.push({ ...rect, color: p.color, hasAudio: p.hasAudio, exportIndex: p.exportIndex });
+    }
+  }
+
   const pagesHtml = pages
     .map(
       (page, pageIndex) => `
     <div class="page-wrapper" style="width:${page.width}px;max-width:100%;">
       <img src="${page.dataUrl}" alt="Pagina ${pageIndex + 1}" style="display:block;width:100%;height:auto;" />
       <div class="page-overlay">
-        ${passages
-          .filter((p) => p.page === pageIndex + 1)
+        ${buttons
+          .filter((b) => b.page === pageIndex + 1)
           .map(
-            (p) => `
-        <button type="button" class="passage-button color-${p.color || "goud"}${p.hasAudio ? "" : " note-only"}" data-index="${p.exportIndex}"
-          style="left:${p.x_pct * 100}%;top:${p.y_pct * 100}%;width:${p.width_pct * 100}%;height:${p.height_pct * 100}%;">
-          <span class="play-icon">${p.hasAudio ? PLAY_ICON_SVG : NOTE_ICON_SVG}</span>
+            (b) => `
+        <button type="button" class="passage-button color-${b.color || "goud"}${b.hasAudio ? "" : " note-only"}" data-index="${b.exportIndex}"
+          style="left:${b.x_pct * 100}%;top:${b.y_pct * 100}%;width:${b.width_pct * 100}%;height:${b.height_pct * 100}%;">
+          <span class="play-icon">${b.hasAudio ? PLAY_ICON_SVG : NOTE_ICON_SVG}</span>
         </button>`
           )
           .join("")}
@@ -148,11 +158,14 @@ ${pagesHtml}
     // De knoppen staan in de DOM per pagina gegroepeerd, niet per se in
     // dezelfde volgorde als PASSAGES (die de algemene sort_order volgt).
     // Elke knop kent daarom zijn eigen PASSAGES-index via data-index —
-    // dat is de betrouwbare koppeling, niet de positie in de NodeList.
+    // dat is de betrouwbare koppeling, niet de positie in de NodeList. Eén
+    // passage kan uit meerdere vakken (dus meerdere knoppen) bestaan, die
+    // dan dezelfde index delen.
     var buttons = new Array(PASSAGES.length);
     buttonEls.forEach(function (btn) {
       var idx = parseInt(btn.dataset.index, 10);
-      buttons[idx] = btn;
+      if (!buttons[idx]) buttons[idx] = [];
+      buttons[idx].push(btn);
     });
     var currentAudio = null;
     var currentIndex = -1;
@@ -160,9 +173,9 @@ ${pagesHtml}
     var ICON_PLAY = ${JSON.stringify(PLAY_ICON_BIG_SVG)};
     var ICON_PAUSE = ${JSON.stringify(PAUSE_ICON_BIG_SVG)};
 
-    function setPlaying(btn, playing) {
-      if (!btn) return;
-      btn.classList.toggle("playing", playing);
+    function setPlaying(btns, playing) {
+      if (!btns) return;
+      btns.forEach(function (btn) { btn.classList.toggle("playing", playing); });
     }
 
     function updateNavButtons() {
@@ -190,8 +203,8 @@ ${pagesHtml}
       playerBar.hidden = false;
       updateNavButtons();
 
-      if (buttons[index] && buttons[index].scrollIntoView) {
-        buttons[index].scrollIntoView({ behavior: "smooth", block: "center" });
+      if (buttons[index] && buttons[index][0] && buttons[index][0].scrollIntoView) {
+        buttons[index][0].scrollIntoView({ behavior: "smooth", block: "center" });
       }
 
       if (passage.hasAudio) {
@@ -407,11 +420,7 @@ export async function exportStandaloneHtml(piece, allPassages, pdfContainer) {
       title: p.title,
       description: p.description,
       color: p.color,
-      page: p.page,
-      x_pct: p.x_pct,
-      y_pct: p.y_pct,
-      width_pct: p.width_pct,
-      height_pct: p.height_pct,
+      rects: p.rects,
       hasAudio: p.hasAudio,
       audioDataUri,
       exportIndex: exportIndex++,

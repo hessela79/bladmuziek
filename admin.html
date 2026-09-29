@@ -134,6 +134,10 @@
           <div class="pdf-toolbar">
             <button id="add-passage-btn" class="btn btn-primary" hidden>+ Passage tekenen</button>
             <p id="draw-hint" class="draw-hint" hidden>Sleep een rechthoek over de moeilijke passage op de bladmuziek (of klik gewoon één keer).</p>
+            <div id="draw-more-banner" class="draw-more-banner" hidden>
+              <p>Sleep het volgende vak voor deze passage — bijvoorbeeld op de volgende regel of pagina.</p>
+              <button type="button" id="draw-more-cancel" class="btn btn-secondary btn-small">Annuleren — terug naar het formulier</button>
+            </div>
           </div>
         </div>
 
@@ -179,6 +183,11 @@
           <button type="button" class="color-swatch color-bruin" data-color="bruin" title="Bruin"></button>
           <button type="button" class="color-swatch color-goud" data-color="goud" title="Goud"></button>
         </div>
+      </div>
+      <div class="field">
+        <span>Vakken op de bladmuziek</span>
+        <div id="pf-rects-list" class="rects-list"></div>
+        <button type="button" id="pf-add-rect-btn" class="btn btn-add-vak">+ Nog een vak toevoegen</button>
       </div>
       <label class="check-field">
         <span class="check-box">

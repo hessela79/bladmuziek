@@ -63,6 +63,8 @@ const pdfPageIndicator = document.getElementById("pdf-page-indicator");
 const pdfContainer = document.getElementById("admin-pdf-container");
 const addPassageBtn = document.getElementById("add-passage-btn");
 const drawHint = document.getElementById("draw-hint");
+const drawMoreBanner = document.getElementById("draw-more-banner");
+const drawMoreCancelBtn = document.getElementById("draw-more-cancel");
 
 const passageListEl = document.getElementById("passage-list");
 
@@ -77,6 +79,8 @@ const pfAudioUpload = document.getElementById("pf-audio-upload");
 const pfDelete = document.getElementById("pf-delete");
 const pfCancel = document.getElementById("pf-cancel");
 const pfSave = document.getElementById("pf-save");
+const pfRectsList = document.getElementById("pf-rects-list");
+const pfAddRectBtn = document.getElementById("pf-add-rect-btn");
 const pfColorSwatches = Array.from(document.querySelectorAll("#pf-color-swatches .color-swatch"));
 
 const PASSAGE_COLORS = ["geel", "groen", "rood", "blauw", "bruin", "goud"];
@@ -107,12 +111,20 @@ const state = {
   currentPage: 1,
   pdfAssetId: null,
   pdfFile: null,
-  passages: [], // {_key, id, title, description, audioAssetId, audioFile, color, page, xPct, yPct, widthPct, heightPct, sortOrder, deleted}
+  passages: [], // {_key, id, title, description, audioAssetId, audioFile, color, sortOrder, deleted, rects}
+  // rects: [{page, xPct, yPct, widthPct, heightPct}, ...] — een passage kan
+  // over meerdere vakken (regels/pagina's) verdeeld zijn.
 };
 
 let drawModeOn = false;
-let activePassageKey = null; // passage being edited in the modal
-let pendingRect = null; // {page, xPct, yPct, widthPct, heightPct} for a not-yet-saved new passage
+let activePassageKey = null; // passage die in de modal bewerkt wordt; null = nieuwe passage
+// De vakken van de passage die momenteel in de modal open staat (of net
+// getekend wordt) — een werkkopie die pas bij "Bewaren" naar state.passages
+// geschreven wordt, zodat "Annuleren" niets van al getekende vakken bewaart.
+let draftRects = null;
+// Voorkomt dat het opnieuw tonen van de modal (na het tekenen van een extra
+// vak) de al ingevulde titel/beschrijving/kleur overschrijft.
+let draftFieldsInitialized = false;
 
 function newKey() {
   return crypto.randomUUID();
@@ -419,6 +431,13 @@ function resetEditorState() {
   state.pdfFile = null;
   state.passages = [];
   drawModeOn = false;
+  draftRects = null;
+  draftFieldsInitialized = false;
+  activePassageKey = null;
+  addPassageBtn.textContent = "+ Passage tekenen";
+  drawHint.hidden = true;
+  drawMoreBanner.hidden = true;
+  pdfContainer.classList.remove("draw-mode");
 }
 
 async function openEditor(piece) {
@@ -449,13 +468,15 @@ async function openEditor(piece) {
       audioAssetId: p.audio_asset_id,
       audioFile: null,
       color: p.color || DEFAULT_PASSAGE_COLOR,
-      page: p.page,
-      xPct: Number(p.x_pct),
-      yPct: Number(p.y_pct),
-      widthPct: Number(p.width_pct),
-      heightPct: Number(p.height_pct),
       sortOrder: p.sort_order,
       deleted: false,
+      rects: (p.rects || []).map((r) => ({
+        page: r.page,
+        xPct: Number(r.x_pct),
+        yPct: Number(r.y_pct),
+        widthPct: Number(r.width_pct),
+        heightPct: Number(r.height_pct),
+      })),
     }));
 
     if (state.pdfAssetId) {
@@ -536,23 +557,65 @@ async function renderCurrentPage() {
   attachDrawHandlers(overlay);
 }
 
-function renderMarkersOnOverlay(overlay) {
-  for (const passage of state.passages) {
-    if (passage.deleted || passage.page !== state.currentPage) continue;
-    const hasAudio = !!(passage.audioAssetId || passage.audioFile);
-    const marker = document.createElement("div");
-    const color = passage.color || DEFAULT_PASSAGE_COLOR;
-    marker.className = "editor-passage-marker color-" + color + (hasAudio ? "" : " note-only");
-    marker.style.left = `${passage.xPct * 100}%`;
-    marker.style.top = `${passage.yPct * 100}%`;
-    marker.style.width = `${passage.widthPct * 100}%`;
-    marker.style.height = `${passage.heightPct * 100}%`;
-    marker.innerHTML = `<span class="marker-badge">${passage.title || "passage"}</span>`;
+function renderRectMarker(overlay, rect, { colorClass, noteOnly, badgeText, clickable, onClick }) {
+  const marker = document.createElement("div");
+  marker.className = "editor-passage-marker color-" + colorClass + (noteOnly ? " note-only" : "");
+  marker.style.left = `${rect.xPct * 100}%`;
+  marker.style.top = `${rect.yPct * 100}%`;
+  marker.style.width = `${rect.widthPct * 100}%`;
+  marker.style.height = `${rect.heightPct * 100}%`;
+  marker.innerHTML = `<span class="marker-badge">${badgeText}</span>`;
+  if (clickable) {
     marker.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (!drawModeOn) openPassageModal(passage._key);
+      onClick();
     });
-    overlay.appendChild(marker);
+  }
+  overlay.appendChild(marker);
+}
+
+// Tekent alle passages op de huidige pagina. Een passage kan uit meerdere
+// vakken bestaan — die krijgen dan een nummertje (1, 2, …) in plaats van de
+// titel, zodat op elke rechthoek meteen duidelijk is dat ze bij elkaar
+// horen. De passage die op dit moment in de modal open staat (nieuw of
+// bewerkt) wordt getekend vanuit de werkkopie (draftRects), niet vanuit de
+// laatst opgeslagen versie, zodat net toegevoegde/verwijderde vakken en de
+// gekozen kleur meteen zichtbaar zijn.
+function renderMarkersOnOverlay(overlay) {
+  for (const passage of state.passages) {
+    if (passage.deleted) continue;
+    const isDraft = draftRects !== null && passage._key === activePassageKey;
+    const rects = isDraft ? draftRects : passage.rects;
+    const hasAudio = !!(passage.audioAssetId || passage.audioFile);
+    const color = (isDraft ? selectedColor : passage.color) || DEFAULT_PASSAGE_COLOR;
+    const showNumbers = rects.length > 1;
+    rects.forEach((rect, i) => {
+      if (rect.page !== state.currentPage) return;
+      renderRectMarker(overlay, rect, {
+        colorClass: color,
+        noteOnly: !hasAudio,
+        badgeText: showNumbers ? String(i + 1) : passage.title || "passage",
+        clickable: true,
+        onClick: () => {
+          if (!drawModeOn) openPassageModal(passage._key);
+        },
+      });
+    });
+  }
+
+  // Een gloednieuwe passage heeft nog geen rij in state.passages (die komt
+  // er pas bij "Bewaren") — die vakken apart tekenen.
+  if (draftRects !== null && activePassageKey === null) {
+    const showNumbers = draftRects.length > 1;
+    draftRects.forEach((rect, i) => {
+      if (rect.page !== state.currentPage) return;
+      renderRectMarker(overlay, rect, {
+        colorClass: selectedColor,
+        noteOnly: false,
+        badgeText: showNumbers ? String(i + 1) : "nieuw",
+        clickable: false,
+      });
+    });
   }
 }
 
@@ -591,10 +654,32 @@ fPdfUpload.addEventListener("change", async () => {
 // ---------- Drawing new passage rectangles ----------
 
 addPassageBtn.addEventListener("click", () => {
-  drawModeOn = !drawModeOn;
-  addPassageBtn.textContent = drawModeOn ? "Annuleer tekenen" : "+ Passage tekenen";
-  drawHint.hidden = !drawModeOn;
-  pdfContainer.classList.toggle("draw-mode", drawModeOn);
+  if (drawModeOn) {
+    // Annuleer het tekenen van het eerste vak van een gloednieuwe passage —
+    // er is nog niets getekend, dus er is ook niets te bewaren.
+    drawModeOn = false;
+    draftRects = null;
+    addPassageBtn.textContent = "+ Passage tekenen";
+    drawHint.hidden = true;
+    pdfContainer.classList.remove("draw-mode");
+    renderCurrentPage();
+  } else {
+    draftRects = [];
+    draftFieldsInitialized = false;
+    activePassageKey = null;
+    drawModeOn = true;
+    addPassageBtn.textContent = "Annuleer tekenen";
+    drawHint.hidden = false;
+    pdfContainer.classList.add("draw-mode");
+  }
+});
+
+drawMoreCancelBtn.addEventListener("click", () => {
+  drawModeOn = false;
+  pdfContainer.classList.remove("draw-mode");
+  drawMoreBanner.hidden = true;
+  renderCurrentPage();
+  openPassageModal(activePassageKey, { keepDraft: true });
 });
 
 function attachDrawHandlers(overlay) {
@@ -653,18 +738,22 @@ function attachDrawHandlers(overlay) {
       top = Math.max(0, Math.min(y - h / 2, rect.height - h));
     }
 
-    pendingRect = {
+    draftRects.push({
       page: state.currentPage,
       xPct: left / rect.width,
       yPct: top / rect.height,
       widthPct: w / rect.width,
       heightPct: h / rect.height,
-    };
+    });
     drawModeOn = false;
     addPassageBtn.textContent = "+ Passage tekenen";
     drawHint.hidden = true;
+    drawMoreBanner.hidden = true;
     pdfContainer.classList.remove("draw-mode");
-    openPassageModal(null);
+    // keepDraft: dit vak is zojuist aan draftRects toegevoegd — de al
+    // ingevulde titel/beschrijving/kleur (of "Nieuwe passage" bij het
+    // allereerste vak) mogen niet overschreven worden.
+    openPassageModal(activePassageKey, { keepDraft: draftFieldsInitialized });
   });
 }
 
@@ -682,39 +771,87 @@ pfNoAudio.addEventListener("change", () => {
   updateNoAudioFieldState();
 });
 
-function openPassageModal(key) {
+// Vakken die uit de bladmuziek (regel/pagina) bestaan. `keepDraft` geeft aan
+// dat we de modal opnieuw tonen ná het tekenen van een extra vak (of na
+// annuleren daarvan) voor dezelfde passage — dan mogen de al ingevulde
+// velden niet gereset worden, alleen het vakkenlijstje wordt ververst.
+function openPassageModal(key, { keepDraft = false } = {}) {
   activePassageKey = key;
-  if (key) {
-    const passage = state.passages.find((p) => p._key === key);
-    passageModalTitle.textContent = "Passage bewerken";
-    pfTitle.value = passage.title || "";
-    pfDescription.value = passage.description || "";
-    pfAudioSelect.value = passage.audioAssetId || "";
-    pfAudioUpload.value = "";
-    pfNoAudio.checked = !passage.audioAssetId && !passage.audioFile;
-    pfDelete.hidden = false;
-    setSelectedColor(passage.color || DEFAULT_PASSAGE_COLOR);
-  } else {
-    passageModalTitle.textContent = "Nieuwe passage";
-    pfTitle.value = "";
-    pfDescription.value = "";
-    pfAudioSelect.value = "";
-    pfAudioUpload.value = "";
-    pfNoAudio.checked = false;
-    pfDelete.hidden = true;
-    setSelectedColor(DEFAULT_PASSAGE_COLOR);
+  if (!keepDraft) {
+    if (key) {
+      const passage = state.passages.find((p) => p._key === key);
+      passageModalTitle.textContent = "Passage bewerken";
+      pfTitle.value = passage.title || "";
+      pfDescription.value = passage.description || "";
+      pfAudioSelect.value = passage.audioAssetId || "";
+      pfAudioUpload.value = "";
+      pfNoAudio.checked = !passage.audioAssetId && !passage.audioFile;
+      pfDelete.hidden = false;
+      setSelectedColor(passage.color || DEFAULT_PASSAGE_COLOR);
+      draftRects = passage.rects.map((r) => ({ ...r }));
+    } else {
+      passageModalTitle.textContent = "Nieuwe passage";
+      pfTitle.value = "";
+      pfDescription.value = "";
+      pfAudioSelect.value = "";
+      pfAudioUpload.value = "";
+      pfNoAudio.checked = false;
+      pfDelete.hidden = true;
+      setSelectedColor(DEFAULT_PASSAGE_COLOR);
+      // draftRects bevat op dit moment al het zojuist getekende eerste vak
+      // (gezet door de pointerup-handler vóór deze aanroep).
+    }
+    updateNoAudioFieldState();
+    draftFieldsInitialized = true;
   }
-  updateNoAudioFieldState();
+  renderRectsList();
+  addPassageBtn.hidden = true;
   passageModal.hidden = false;
 }
+
+function renderRectsList() {
+  pfRectsList.innerHTML = "";
+  draftRects.forEach((rect, i) => {
+    const row = document.createElement("div");
+    row.className = "rect-row";
+    const canRemove = draftRects.length > 1;
+    row.innerHTML = `
+      <span class="rect-badge">${i + 1}</span>
+      <span class="rect-row-label">Pagina ${rect.page}</span>
+      ${canRemove ? '<button type="button" class="rect-remove" aria-label="Vak verwijderen" title="Vak verwijderen">✕</button>' : ""}
+    `;
+    if (canRemove) {
+      row.querySelector(".rect-remove").addEventListener("click", () => {
+        draftRects.splice(i, 1);
+        renderRectsList();
+        renderCurrentPage();
+      });
+    }
+    pfRectsList.appendChild(row);
+  });
+}
+
+pfAddRectBtn.addEventListener("click", () => {
+  passageModal.hidden = true;
+  drawModeOn = true;
+  drawHint.hidden = true;
+  drawMoreBanner.hidden = false;
+  pdfContainer.classList.add("draw-mode");
+  renderCurrentPage();
+});
 
 function closePassageModal() {
   passageModal.hidden = true;
   activePassageKey = null;
-  pendingRect = null;
+  draftRects = null;
+  draftFieldsInitialized = false;
+  addPassageBtn.hidden = false;
 }
 
-pfCancel.addEventListener("click", closePassageModal);
+pfCancel.addEventListener("click", () => {
+  closePassageModal();
+  renderCurrentPage();
+});
 
 pfSave.addEventListener("click", async () => {
   const title = pfTitle.value.trim();
@@ -722,14 +859,20 @@ pfSave.addEventListener("click", async () => {
     alert("Geef de passage een titel.");
     return;
   }
+  if (!draftRects || draftRects.length === 0) {
+    alert("Teken minstens één vak op de bladmuziek.");
+    return;
+  }
   const audioFile = pfNoAudio.checked ? null : pfAudioUpload.files[0] || null;
   const audioAssetId = pfNoAudio.checked ? null : pfAudioSelect.value || null;
+  const rects = draftRects.map((r) => ({ ...r }));
 
   if (activePassageKey) {
     const passage = state.passages.find((p) => p._key === activePassageKey);
     passage.title = title;
     passage.description = pfDescription.value.trim();
     passage.color = selectedColor;
+    passage.rects = rects;
     if (pfNoAudio.checked) {
       passage.audioFile = null;
       passage.audioAssetId = null;
@@ -749,11 +892,7 @@ pfSave.addEventListener("click", async () => {
       audioAssetId: audioFile ? null : audioAssetId,
       audioFile,
       color: selectedColor,
-      page: pendingRect.page,
-      xPct: pendingRect.xPct,
-      yPct: pendingRect.yPct,
-      widthPct: pendingRect.widthPct,
-      heightPct: pendingRect.heightPct,
+      rects,
       sortOrder: state.passages.length,
       deleted: false,
     });
@@ -788,12 +927,15 @@ function renderPassageList() {
   for (const passage of visible) {
     const hasAudio = !!(passage.audioAssetId || passage.audioFile);
     const color = passage.color || DEFAULT_PASSAGE_COLOR;
+    const pages = [...new Set(passage.rects.map((r) => r.page))];
+    const pageLabel =
+      passage.rects.length > 1 ? `${passage.rects.length} vakken (pagina ${pages.join(", ")})` : `Pagina ${pages[0]}`;
     const row = document.createElement("div");
     row.className = "passage-row";
     row.innerHTML = `
       <div>
         <div class="passage-row-title"><span class="color-swatch color-${color} passage-row-dot"></span>${passage.title}${hasAudio ? "" : ' <span class="passage-row-note-badge">alleen opmerking</span>'}</div>
-        <div class="passage-row-meta">Pagina ${passage.page} · ${passage.description || ""}</div>
+        <div class="passage-row-meta">${pageLabel} · ${passage.description || ""}</div>
       </div>
       <button class="btn btn-secondary btn-small">Bewerken</button>
     `;
@@ -886,12 +1028,14 @@ saveBtn.addEventListener("click", async () => {
         description: passage.description,
         audio_asset_id: audioAssetId,
         color: passage.color || DEFAULT_PASSAGE_COLOR,
-        page: passage.page,
-        x_pct: passage.xPct,
-        y_pct: passage.yPct,
-        width_pct: passage.widthPct,
-        height_pct: passage.heightPct,
         sort_order: order++,
+        rects: passage.rects.map((r) => ({
+          page: r.page,
+          x_pct: r.xPct,
+          y_pct: r.yPct,
+          width_pct: r.widthPct,
+          height_pct: r.heightPct,
+        })),
       };
 
       editorStatus.textContent = `Passage "${passage.title}" opslaan…`;

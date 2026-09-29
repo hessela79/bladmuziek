@@ -47,14 +47,24 @@ CREATE TABLE IF NOT EXISTS passages (
   description TEXT,
   audio_asset_id CHAR(36),
   color VARCHAR(20) NOT NULL DEFAULT 'goud',
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (piece_id) REFERENCES pieces (id) ON DELETE CASCADE,
+  FOREIGN KEY (audio_asset_id) REFERENCES assets (id) ON DELETE SET NULL,
+  CONSTRAINT passages_color_check CHECK (color IN ('geel', 'groen', 'rood', 'blauw', 'bruin', 'goud'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Eén passage kan uit meerdere rechthoeken bestaan (bijv. een passage die
+-- over twee regels of een pagina-einde loopt) — vandaar een aparte tabel
+-- in plaats van page/x_pct/... rechtstreeks op passages.
+CREATE TABLE IF NOT EXISTS passage_rects (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  passage_id CHAR(36) NOT NULL,
   page INT NOT NULL,
   x_pct DECIMAL(9, 6) NOT NULL,
   y_pct DECIMAL(9, 6) NOT NULL,
   width_pct DECIMAL(9, 6) NOT NULL,
   height_pct DECIMAL(9, 6) NOT NULL,
   sort_order INT NOT NULL DEFAULT 0,
-  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (piece_id) REFERENCES pieces (id) ON DELETE CASCADE,
-  FOREIGN KEY (audio_asset_id) REFERENCES assets (id) ON DELETE SET NULL,
-  CONSTRAINT passages_color_check CHECK (color IN ('geel', 'groen', 'rood', 'blauw', 'bruin', 'goud'))
+  FOREIGN KEY (passage_id) REFERENCES passages (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

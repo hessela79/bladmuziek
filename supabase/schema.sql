@@ -46,13 +46,22 @@ create table if not exists passages (
   description text,
   audio_asset_id uuid references assets (id) on delete set null,
   color text not null default 'goud' check (color in ('geel', 'groen', 'rood', 'blauw', 'bruin', 'goud')),
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+-- Eén passage kan uit meerdere rechthoeken bestaan (bijv. een passage die
+-- over twee regels of een pagina-einde loopt) — vandaar een aparte tabel
+-- in plaats van page/x_pct/... rechtstreeks op passages.
+create table if not exists passage_rects (
+  id uuid primary key default gen_random_uuid(),
+  passage_id uuid not null references passages (id) on delete cascade,
   page int not null,
   x_pct numeric not null,
   y_pct numeric not null,
   width_pct numeric not null,
   height_pct numeric not null,
-  sort_order int not null default 0,
-  created_at timestamptz not null default now()
+  sort_order int not null default 0
 );
 
 -- RLS aan, met (voorlopig) volledig open policies — zie opmerking
@@ -60,6 +69,7 @@ create table if not exists passages (
 alter table assets enable row level security;
 alter table pieces enable row level security;
 alter table passages enable row level security;
+alter table passage_rects enable row level security;
 
 create policy "open select assets" on assets for select using (true);
 create policy "open insert assets" on assets for insert with check (true);
@@ -75,6 +85,11 @@ create policy "open select passages" on passages for select using (true);
 create policy "open insert passages" on passages for insert with check (true);
 create policy "open update passages" on passages for update using (true);
 create policy "open delete passages" on passages for delete using (true);
+
+create policy "open select passage_rects" on passage_rects for select using (true);
+create policy "open insert passage_rects" on passage_rects for insert with check (true);
+create policy "open update passage_rects" on passage_rects for update using (true);
+create policy "open delete passage_rects" on passage_rects for delete using (true);
 
 -- ---------- Storage: buckets voor de bestanden zelf ----------
 

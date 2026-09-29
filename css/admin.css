@@ -588,6 +588,24 @@
   margin: 0;
 }
 
+.draw-more-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--gold-wash);
+  border: 1.5px dashed var(--gold-bright);
+  border-radius: 10px;
+  padding: 14px 16px;
+  width: 100%;
+}
+
+.draw-more-banner p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+
 .draw-rect {
   position: absolute;
   border: 1.5px dashed var(--gold);
@@ -657,6 +675,71 @@
 .color-swatch.color-blauw { background: var(--color-blauw); }
 .color-swatch.color-bruin { background: var(--color-bruin); }
 .color-swatch.color-goud { background: var(--gold); }
+
+.rects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.rect-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: var(--parchment);
+}
+
+.rect-badge {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fffdf8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.rect-row-label {
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--ink);
+}
+
+.rect-remove {
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.rect-remove:hover {
+  background: var(--gold-wash);
+  color: var(--ink);
+}
+
+.btn-add-vak {
+  border: 1.5px dashed var(--gold-bright);
+  background: var(--gold-wash);
+  color: var(--gold);
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+}
 
 .passage-row-dot {
   display: inline-block;
