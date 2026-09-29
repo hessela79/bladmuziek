@@ -19,7 +19,15 @@ om even te checken.
 
 ## Nog niet live (wél al in git op `main`)
 
-Nog niets — alles op `main` staat nu ook op hjk.hartvolmuziek.nl.
+- `2e66fbe` — **Nieuwe functie + database-migratie**: de stemgroepen van
+  een stuk worden niet meer los ingesteld, maar automatisch bepaald uit
+  de stemgroep(en) die je per passage kiest (unie van alle
+  niet-verwijderde passages). Vereist bij het live zetten: eerst
+  `sql/003_passage_voices.sql` op de productie-database draaien (voegt
+  de nieuwe kolom toe én vult die voor bestaande passages met de
+  huidige stemgroepen van hun stuk, zodat er niets zichtbaar verandert
+  totdat je zelf per passage een specifiekere stemgroep kiest). Lokaal
+  end-to-end getest met Playwright vóór deze commit.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 

@@ -9,3 +9,12 @@
 
 ALTER TABLE passages
   ADD COLUMN voices VARCHAR(32) NOT NULL DEFAULT '' AFTER color;
+
+-- Vult elke bestaande passage met de huidige stemgroepen van haar stuk,
+-- zodat er in de app niets zichtbaar verandert totdat je zelf per
+-- passage een specifiekere stemgroep kiest (anders zou het stuk zijn
+-- stemgroepen kwijtraken zodra je het voor het eerst weer opslaat, want
+-- dan is de unie over alle -nog lege- passages leeg).
+UPDATE passages p
+JOIN pieces pc ON pc.id = p.piece_id
+SET p.voices = pc.voices;
