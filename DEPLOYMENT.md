@@ -47,6 +47,14 @@ naar hjk.hartvolmuziek.nl geüpload zijn:
   geen dataverlies), dán pas de nieuwe bestanden uploaden. Lokaal
   end-to-end getest (aanmaken/bewerken/verwijderen van vakken, viewer,
   cascade-verwijdering) met Playwright vóór deze commit.
+- `6ff8f86` — **Bugfix**: de "sleep het volgende vak"-banner uit de
+  vorige commit bleef per ongeluk altijd zichtbaar staan onder "+
+  Passage tekenen" (ook buiten het tekenen van een extra vak om), en de
+  knop erin deed dan niets. Zelfde bugpatroon als eerder bij de
+  Uitloggen-knop: eigen CSS overschreef de browserstandaard voor
+  `hidden`. Trof ook (onopgemerkt, al langer bestaand) "+ Passage
+  tekenen" vóór het kiezen van een PDF en "Verwijderen" bij een nieuwe
+  passage. Puur een CSS-fix, geen database-wijziging.
 
 _Nieuwe wijzigingen die je vanmiddag via Supabase/GitHub Pages laat
 testen, komen hieronder bij te staan zodra ze gepusht worden._
