@@ -10,14 +10,54 @@ wachtwoord) voeg je zelf stukken, PDF's en oefenfragmenten toe.
 
 - **Frontend**: statische HTML/CSS/JS (geen build-stap, geen framework).
   `index.html` (overzicht), `viewer.html` (bladmuziek + afspeelknoppen),
-  `admin.html` (beheer, achter een wachtwoord).
-- **Backend**: een kleine PHP-API in `api/` die met een MariaDB-database
-  praat — draait op gewone PHP+MySQL/MariaDB shared hosting (bijv.
-  mijndomein.nl). Lezen (de site bekijken) is open; toevoegen/wijzigen/
-  verwijderen vereist een ingelogde beheerder.
-- **Bestanden** (PDF's, mp3/mp4-fragmenten) staan gewoon als losse
-  bestanden in `uploads/pdfs/` en `uploads/audio/` op de server, niet in
-  de database.
+  `admin.html` (beheer, achter een wachtwoord in productie).
+- **Twee backends, automatisch gekozen** (zie hieronder): productie
+  draait op een eigen PHP-API + MariaDB, ontwikkelen/testen kan gewoon
+  op Supabase blijven draaien (bijv. via GitHub Pages), zonder dat je
+  iets hoeft om te zetten.
+- **Bestanden** (PDF's, mp3/mp4-fragmenten): in de MariaDB-opzet gewoon
+  losse bestanden in `uploads/pdfs/` en `uploads/audio/` op de server;
+  in de Supabase-opzet in Supabase Storage.
+
+## Twee backends: productie (MariaDB) vs. ontwikkelen (Supabase)
+
+`js/apiClient.js` kiest bij het laden welke backend-implementatie de
+rest van de app gebruikt — de pagina's zelf (`home.js`, `viewer.js`,
+`admin.js`, `export.js`) weten niet welke het is, ze importeren altijd
+gewoon van `./apiClient.js`.
+
+- **`js/backends/mariadb.js`** — praat met de eigen PHP-API in `api/`
+  (zie de secties hieronder). Dit is de productie-opzet: schrijven
+  (toevoegen/wijzigen/verwijderen) vereist een ingelogde beheerder.
+- **`js/backends/supabase.js`** — praat rechtstreeks met Supabase
+  (Postgres + Storage), zoals deze app oorspronkelijk werkte. RLS staat
+  daar open, dus er is geen login nodig — puur bedoeld om aanpassingen
+  te testen zonder de productie-database te raken. Laadt de gevendorde
+  Supabase-library (`js/vendor/supabase/supabase.js`) alleen wanneer
+  deze backend echt gekozen wordt.
+
+De keuze gaat zo:
+
+1. Staat er `?backend=mariadb` of `?backend=supabase` in de URL? Gebruik
+   die, ongeacht hostnaam — handig om lokaal een van beide te forceren.
+2. Anders: staat het hostnaam (`location.hostname`) in de
+   `PRODUCTION_HOSTS`-lijst bovenin `js/apiClient.js`? Dan MariaDB.
+3. Anders (GitHub Pages, `localhost`, een preview-domein, …): Supabase.
+
+Zo werkt de site vanzelf op MariaDB zodra hij op het echte
+productiedomein draait, en val je overal elders automatisch terug op
+Supabase om veilig te kunnen testen. Pas `PRODUCTION_HOSTS` in
+`js/apiClient.js` aan als je productiedomein verandert.
+
+### Testen op GitHub Pages met Supabase
+
+Omdat de Supabase-backend puur client-side is (geen PHP nodig), kan de
+hele site ook weer als statische site op GitHub Pages draaien —
+handig om aanpassingen te bekijken zonder ze naar de MariaDB-hosting te
+hoeven uploaden. `.github/workflows/deploy-pages.yml` deployt de
+`main`-branch automatisch (eenmalig aanzetten: Settings → Pages →
+Source: GitHub Actions). Let op: dit gebruikt dezelfde Supabase-data als
+eerder — niet de MariaDB-data van productie.
 
 ## Lokaal draaien
 
@@ -89,13 +129,20 @@ nieuwe backend.
 
 ## Belangrijkste bestanden
 
-- `js/apiClient.js` — alle communicatie met de PHP-API (lezen is open,
+- `js/apiClient.js` — kiest en her-exporteert een van de twee backends
+  hieronder (zie "Twee backends" hierboven).
+- `js/backends/mariadb.js` — communicatie met de PHP-API (lezen is open,
   schrijven vereist inloggen; de browser stuurt het sessie-cookie vanzelf
   mee omdat alles op hetzelfde domein draait).
-- `api/*.php` — de backend: `pieces.php`, `passages.php`, `assets.php`,
-  `upload.php`, `reorder_pieces.php` (data), en `login.php`/`logout.php`/
-  `session.php`/`auth.php` (inloggen voor het beheerscherm).
-- `sql/mariadb_schema.sql` — het databaseschema.
+- `js/backends/supabase.js` — communicatie met Supabase, voor
+  ontwikkelen/testen.
+- `api/*.php` — de MariaDB-backend: `pieces.php`, `passages.php`,
+  `assets.php`, `upload.php`, `reorder_pieces.php` (data), en
+  `login.php`/`logout.php`/`session.php`/`auth.php` (inloggen voor het
+  beheerscherm).
+- `sql/mariadb_schema.sql` — het MariaDB-databaseschema.
+- `supabase/schema.sql` — het (oudere, maar nog actuele) Supabase-schema
+  voor de ontwikkel-/testomgeving.
 - `js/home.js` / `js/viewer.js` / `js/admin.js` — respectievelijk het
   overzicht, de bladmuziek-viewer (met [pdf.js](https://mozilla.github.io/pdf.js/),
   lokaal meegeleverd in `js/vendor/pdfjs/`) en het beheerscherm.
