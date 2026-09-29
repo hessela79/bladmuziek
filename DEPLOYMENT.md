@@ -23,6 +23,14 @@ naar hjk.hartvolmuziek.nl geüpload zijn:
   Supabase voor testen. Puur infrastructuur; verandert niets aan hoe
   productie zich gedraagt zodra het wél geüpload wordt (het domein
   hjk.hartvolmuziek.nl blijft automatisch de MariaDB-backend gebruiken).
+- `8f7b94c` — Dit bestand (DEPLOYMENT.md) zelf; hoeft niet per se mee
+  geüpload te worden (het wordt niet door de app gebruikt), maar kan
+  geen kwaad.
+- `ed134af` — **Echte bugfix**: passage tekenen op een tablet/
+  touchscreen liet het venster scrollen in plaats van een rechthoek te
+  tekenen (ontbrekende `touch-action: none` tijdens het tekenen). Deze
+  wil je waarschijnlijk wél snel live hebben zodra je op een tablet
+  test/beheert.
 
 _Nieuwe wijzigingen die je vanmiddag via Supabase/GitHub Pages laat
 testen, komen hieronder bij te staan zodra ze gepusht worden._
