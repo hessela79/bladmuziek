@@ -31,6 +31,14 @@ naar hjk.hartvolmuziek.nl geüpload zijn:
   tekenen (ontbrekende `touch-action: none` tijdens het tekenen). Deze
   wil je waarschijnlijk wél snel live hebben zodra je op een tablet
   test/beheert.
+- `78f4fd6` — Dit bestand zelf bijgewerkt met de tablet-fix hierboven.
+  Geen effect op de app.
+- `5191a63` — Wachtwoordpopup toegevoegd voor de test-/GitHub
+  Pages-omgeving (`js/devGate.js`, `js/prodHosts.js`). **Verandert niets
+  aan productie**: op `hjk.hartvolmuziek.nl` zelf blijft de popup altijd
+  weg (productiedomein staat op de uitzonderingslijst), dus dit hoeft
+  qua urgentie niet snel live — het is puur bedoeld om de Supabase/
+  GitHub Pages-testomgeving af te schermen.
 
 _Nieuwe wijzigingen die je vanmiddag via Supabase/GitHub Pages laat
 testen, komen hieronder bij te staan zodra ze gepusht worden._
