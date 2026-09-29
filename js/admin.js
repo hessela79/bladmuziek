@@ -603,6 +603,11 @@ function attachDrawHandlers(overlay) {
 
   overlay.addEventListener("pointerdown", (e) => {
     if (!drawModeOn) return;
+    // Voorkomt dat een sleepbeweging met de vinger (tablet/touchscreen)
+    // als scrollen/pannen van de pagina wordt opgevat — zie ook de
+    // touch-action: none hierboven in css/admin.css.
+    e.preventDefault();
+    overlay.setPointerCapture(e.pointerId);
     const rect = overlay.getBoundingClientRect();
     dragStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     dragEl = document.createElement("div");
@@ -612,6 +617,7 @@ function attachDrawHandlers(overlay) {
 
   overlay.addEventListener("pointermove", (e) => {
     if (!dragStart || !dragEl) return;
+    e.preventDefault();
     const rect = overlay.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;

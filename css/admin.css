@@ -558,6 +558,14 @@
   outline-offset: 2px;
 }
 
+/* Zonder dit interpreteert de browser een sleepbeweging met de vinger
+   (tablet/touchscreen) als scrollen/pannen van de pagina in plaats van
+   als een tekengebaar op de overlay — de pointer-events vuurden dan
+   wel, maar het venster bewoog tegelijk mee. */
+.pdf-container.draw-mode .page-overlay {
+  touch-action: none;
+}
+
 /* Tijdens het tekenen mogen bestaande markeringen de klik niet
    onderscheppen, anders opent per ongeluk de bewerk-modal van een
    bestaande passage in plaats van het nieuwe-passage-formulier. */
