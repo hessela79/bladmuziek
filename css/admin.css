@@ -85,6 +85,14 @@
   transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
+/* Zonder dit wint deze regel het van de browser-standaard "verberg bij
+   [hidden]" (auteurs-CSS overschrijft de standaard-stylesheet, ongeacht
+   volgorde) — dan blijft bijv. "+ Passage tekenen" of "Verwijderen"
+   zichtbaar terwijl het element wel degelijk hidden is. */
+.btn[hidden] {
+  display: none;
+}
+
 .btn-small {
   padding: 6px 12px;
   font-size: 0.78rem;
@@ -598,6 +606,10 @@
   border-radius: 10px;
   padding: 14px 16px;
   width: 100%;
+}
+
+.draw-more-banner[hidden] {
+  display: none;
 }
 
 .draw-more-banner p {
