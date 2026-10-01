@@ -8,6 +8,13 @@ function chevronIcon() {
   return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>`;
 }
 
+function passageSummary(passageCount, noteCount) {
+  const parts = [];
+  if (passageCount > 0) parts.push(`${passageCount} oefenpassage${passageCount === 1 ? "" : "s"}`);
+  if (noteCount > 0) parts.push(`${noteCount} opmerking${noteCount === 1 ? "" : "en"}`);
+  return parts.length > 0 ? parts.join(", ") : "Nog geen oefenpassages";
+}
+
 function renderCard(piece) {
   const chips = piece.voices
     .map((v) => `<div class="voice-chip ${v.toLowerCase()}">${VOICE_LABELS[v] || v}</div>`)
@@ -26,7 +33,7 @@ function renderCard(piece) {
       </div>
       <div class="voice-chips">${chips}${soloChip}</div>
       <div class="piece-card-footer">
-        <span>${piece.passageCount} oefenpassage${piece.passageCount === 1 ? "" : "s"}</span>
+        <span>${passageSummary(piece.passageCount, piece.noteCount)}</span>
         ${chevronIcon()}
       </div>
     </div>
@@ -42,8 +49,10 @@ async function main() {
     ]);
 
     const passageCounts = new Map();
+    const noteCounts = new Map();
     for (const p of passages) {
-      passageCounts.set(p.piece_id, (passageCounts.get(p.piece_id) || 0) + 1);
+      const counts = p.audio_asset_id ? passageCounts : noteCounts;
+      counts.set(p.piece_id, (counts.get(p.piece_id) || 0) + 1);
     }
 
     grid.innerHTML = "";
@@ -52,7 +61,13 @@ async function main() {
       return;
     }
     for (const piece of pieces) {
-      grid.appendChild(renderCard({ ...piece, passageCount: passageCounts.get(piece.id) || 0 }));
+      grid.appendChild(
+        renderCard({
+          ...piece,
+          passageCount: passageCounts.get(piece.id) || 0,
+          noteCount: noteCounts.get(piece.id) || 0,
+        })
+      );
     }
   } catch (err) {
     console.error(err);
