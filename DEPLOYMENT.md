@@ -28,10 +28,13 @@ om even te checken.
   huidige stemgroepen van hun stuk, zodat er niets zichtbaar verandert
   totdat je zelf per passage een specifiekere stemgroep kiest). Lokaal
   end-to-end getest met Playwright vóór deze commit.
-- `7db1cda` — Stukkenoverzicht toont nu apart hoeveel passages (met
-  oefenfragment) en hoeveel opmerkingen (zonder fragment) een stuk
-  heeft, i.p.v. één totaal. Puur een weergave-wijziging, geen
+- `7db1cda` — Stukkenoverzicht (beheerscherm) toont nu apart hoeveel
+  passages (met oefenfragment) en hoeveel opmerkingen (zonder fragment)
+  een stuk heeft, i.p.v. één totaal. Puur een weergave-wijziging, geen
   database-wijziging.
+- `c25dc5a` — Zelfde opsplitsing, nu ook op de publieke overzichtspagina
+  die koorleden zien (onder de stemgroep-chips per stuk). Puur een
+  weergave-wijziging, geen database-wijziging.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
