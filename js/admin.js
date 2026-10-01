@@ -198,7 +198,12 @@ async function loadPieces() {
 async function passageCountsByPiece() {
   const data = await listAllPassages();
   const counts = new Map();
-  for (const row of data) counts.set(row.piece_id, (counts.get(row.piece_id) || 0) + 1);
+  for (const row of data) {
+    const entry = counts.get(row.piece_id) || { passages: 0, notes: 0 };
+    if (row.audio_asset_id) entry.passages += 1;
+    else entry.notes += 1;
+    counts.set(row.piece_id, entry);
+  }
   return counts;
 }
 
@@ -219,6 +224,9 @@ function renderPieceList(counts) {
     row.className = "admin-piece-row" + (piece.visible === false ? " hidden-piece" : "");
     row.draggable = true;
     const isVisible = piece.visible !== false;
+    const pieceCounts = counts.get(piece.id) || { passages: 0, notes: 0 };
+    const passageLabel = `${pieceCounts.passages} passage${pieceCounts.passages === 1 ? "" : "s"}`;
+    const noteLabel = `${pieceCounts.notes} opmerking${pieceCounts.notes === 1 ? "" : "en"}`;
     row.innerHTML = `
       <div class="drag-handle" title="Sleep om de volgorde te wijzigen">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>
@@ -226,7 +234,7 @@ function renderPieceList(counts) {
       <div class="piece-swatch"></div>
       <div style="flex:1;min-width:0;">
         <div class="admin-piece-row-title serif">${piece.title}</div>
-        <div class="admin-piece-row-meta">${piece.composer || ""} · ${piece.genre || ""} · ${counts.get(piece.id) || 0} passage(s)</div>
+        <div class="admin-piece-row-meta">${piece.composer || ""} · ${piece.genre || ""} · ${passageLabel}, ${noteLabel}</div>
       </div>
       <div class="admin-piece-row-actions">
         <label class="visibility-toggle" title="Zichtbaar in het overzicht voor gebruikers">
