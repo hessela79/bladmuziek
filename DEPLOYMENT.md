@@ -42,6 +42,9 @@ om even te checken.
   `sql/004_page_views.sql` op de productie-database draaien (voegt
   alleen een nieuwe, lege tabel toe — raakt niets van de bestaande
   data). Lokaal end-to-end getest met Playwright vóór deze commit.
+- `72dc78b` — "Nieuw"/"Bijgewerkt"-label op het publieke overzicht, puur
+  lokaal (localStorage, geen cookie, geen database-wijziging) op basis
+  van het vorige bezoekmoment van die browser.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
