@@ -1,6 +1,7 @@
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
-import { getPiece, listPassages, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor } from "./apiClient.js";
+import { getPiece, listPassages, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor, logPageView } from "./apiClient.js";
 import { exportStandaloneHtml } from "./export.js";
+import { getVisitorId } from "./visitorId.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "./vendor/pdfjs/pdf.worker.min.mjs",
@@ -256,6 +257,10 @@ async function main() {
     statusEl.textContent = "Geen stuk gekozen — ga terug naar het overzicht.";
     return;
   }
+
+  // Bezoek loggen voor de (beheer-only) statistiekenpagina — "fire and
+  // forget", zie js/home.js.
+  logPageView({ path: "viewer", pieceId, visitorId: getVisitorId() }).catch(() => {});
 
   try {
     let piece;

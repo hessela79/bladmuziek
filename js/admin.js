@@ -19,6 +19,7 @@ import {
   login,
   logout,
   checkSession,
+  listPageViews,
 } from "./apiClient.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -33,9 +34,19 @@ const loginForm = document.getElementById("login-form");
 const loginPassword = document.getElementById("login-password");
 const loginError = document.getElementById("login-error");
 const logoutBtn = document.getElementById("logout-btn");
+const statsNavBtn = document.getElementById("stats-nav-btn");
 
 const listView = document.getElementById("list-view");
 const editorView = document.getElementById("editor-view");
+const statsView = document.getElementById("stats-view");
+const statsBackBtn = document.getElementById("stats-back-btn");
+const statsStatus = document.getElementById("stats-status");
+const statsContent = document.getElementById("stats-content");
+const statsTotalHits = document.getElementById("stats-total-hits");
+const statsTotalVisitors = document.getElementById("stats-total-visitors");
+const statsLast7Days = document.getElementById("stats-last-7-days");
+const statsByDayEl = document.getElementById("stats-by-day");
+const statsByPieceEl = document.getElementById("stats-by-piece");
 const pieceListEl = document.getElementById("piece-list");
 const newPieceBtn = document.getElementById("new-piece-btn");
 
@@ -516,6 +527,126 @@ function closeEditor() {
 
 cancelBtn.addEventListener("click", closeEditor);
 newPieceBtn.addEventListener("click", () => openEditor(null));
+
+// ---------- Statistieken ----------
+
+function openStats() {
+  listView.hidden = true;
+  editorView.hidden = true;
+  statsView.hidden = false;
+  loadStats();
+}
+
+function closeStats() {
+  statsView.hidden = true;
+  listView.hidden = false;
+}
+
+statsNavBtn.addEventListener("click", openStats);
+statsBackBtn.addEventListener("click", closeStats);
+
+// MariaDB geeft "2026-10-02 14:23:11" terug (spatie), Supabase
+// "2026-10-02T14:23:11.123+00:00" — new Date(...) parseert de eerste
+// vorm niet betrouwbaar in elke browser, dus altijd normaliseren.
+function toDate(createdAt) {
+  return new Date(String(createdAt).replace(" ", "T"));
+}
+
+// Alle aggregatie gebeurt hier client-side uit de ruwe rijen, net als bij
+// de passage/opmerking-telling elders in dit bestand — zo hoeft de
+// aggregatielogica maar op één plek te staan (i.p.v. los nagebouwd in
+// zowel de PHP- als de Supabase-kant).
+function computeStats(views, pieces) {
+  const pieceTitleById = new Map(pieces.map((p) => [p.id, p.title]));
+
+  const totalHits = views.length;
+  const totalVisitors = new Set(views.map((v) => v.visitor_id)).size;
+
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const hitsLast7Days = views.filter((v) => toDate(v.created_at).getTime() >= sevenDaysAgo).length;
+
+  const fourteenDaysAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  const byDayMap = new Map();
+  for (const v of views) {
+    const t = toDate(v.created_at).getTime();
+    if (t < fourteenDaysAgo) continue;
+    const day = String(v.created_at).slice(0, 10);
+    const entry = byDayMap.get(day) || { hits: 0, visitors: new Set() };
+    entry.hits += 1;
+    entry.visitors.add(v.visitor_id);
+    byDayMap.set(day, entry);
+  }
+  const byDay = [...byDayMap.entries()]
+    .map(([day, e]) => ({ day, hits: e.hits, visitors: e.visitors.size }))
+    .sort((a, b) => (a.day < b.day ? 1 : -1));
+
+  const byPieceMap = new Map();
+  for (const v of views) {
+    if (!v.piece_id) continue;
+    const entry = byPieceMap.get(v.piece_id) || { hits: 0, visitors: new Set() };
+    entry.hits += 1;
+    entry.visitors.add(v.visitor_id);
+    byPieceMap.set(v.piece_id, entry);
+  }
+  const byPiece = [...byPieceMap.entries()]
+    .map(([id, e]) => ({
+      id,
+      title: pieceTitleById.get(id) || "(verwijderd stuk)",
+      hits: e.hits,
+      visitors: e.visitors.size,
+    }))
+    .sort((a, b) => b.hits - a.hits);
+
+  return { totalHits, totalVisitors, hitsLast7Days, byDay, byPiece };
+}
+
+function formatDayLabel(dayStr) {
+  return new Date(`${dayStr}T00:00:00`).toLocaleDateString("nl-NL", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function statsRowHtml(label, hits, visitors) {
+  return `
+    <div class="stats-table-row">
+      <span class="stats-table-row-label">${label}</span>
+      <span class="stats-table-row-meta">${hits} bezoek${hits === 1 ? "" : "en"} · ${visitors} bezoeker${visitors === 1 ? "" : "s"}</span>
+    </div>`;
+}
+
+async function loadStats() {
+  statsStatus.hidden = false;
+  statsStatus.textContent = "Bezig met laden…";
+  statsContent.hidden = true;
+  try {
+    const [views, allPieces] = await Promise.all([listPageViews(), listPieces()]);
+    const stats = computeStats(views, allPieces);
+
+    statsTotalHits.textContent = String(stats.totalHits);
+    statsTotalVisitors.textContent = String(stats.totalVisitors);
+    statsLast7Days.textContent = String(stats.hitsLast7Days);
+
+    statsByDayEl.innerHTML =
+      stats.byDay.length === 0
+        ? `<p class="status">Nog geen bezoeken.</p>`
+        : stats.byDay.map((d) => statsRowHtml(formatDayLabel(d.day), d.hits, d.visitors)).join("");
+
+    statsByPieceEl.innerHTML =
+      stats.byPiece.length === 0
+        ? `<p class="status">Nog geen bezoeken aan een specifiek stuk.</p>`
+        : stats.byPiece.map((p) => statsRowHtml(p.title, p.hits, p.visitors)).join("");
+
+    statsStatus.hidden = true;
+    statsContent.hidden = false;
+  } catch (err) {
+    console.error(err);
+    statsContent.hidden = true;
+    statsStatus.hidden = false;
+    statsStatus.textContent = "Er ging iets mis bij het laden van de statistieken: " + err.message;
+  }
+}
 
 // ---------- PDF preview + page rendering ----------
 
@@ -1100,6 +1231,7 @@ async function showAdmin() {
   loginView.hidden = true;
   listView.hidden = false;
   logoutBtn.hidden = false;
+  statsNavBtn.hidden = false;
   try {
     await loadAssets();
     await refreshList();
@@ -1112,7 +1244,9 @@ async function showAdmin() {
 function showLogin() {
   listView.hidden = true;
   editorView.hidden = true;
+  statsView.hidden = true;
   logoutBtn.hidden = true;
+  statsNavBtn.hidden = true;
   loginView.hidden = false;
   loginPassword.value = "";
   loginError.hidden = true;

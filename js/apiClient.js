@@ -46,4 +46,6 @@ export const {
   login,
   logout,
   checkSession,
+  logPageView,
+  listPageViews,
 } = backend;

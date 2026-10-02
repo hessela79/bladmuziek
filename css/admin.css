@@ -865,3 +865,62 @@
   gap: 8px;
   margin-top: 4px;
 }
+
+/* ---------- Bezoekstatistieken ---------- */
+
+.stats-cards {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.stats-card {
+  flex: 1;
+  min-width: 160px;
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.stats-card-value {
+  font-family: "Lora", Georgia, serif;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.stats-card-label {
+  font-size: 0.78rem;
+  color: var(--ink-muted);
+  margin-top: 4px;
+}
+
+.stats-table {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.stats-table-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--paper);
+  border-radius: 10px;
+  padding: 9px 16px;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.85rem;
+}
+
+.stats-table-row-label {
+  font-weight: 600;
+}
+
+.stats-table-row-meta {
+  color: var(--ink-muted);
+  white-space: nowrap;
+}

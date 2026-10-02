@@ -1,4 +1,10 @@
-import { listPieces, listAllPassages } from "./apiClient.js";
+import { listPieces, listAllPassages, logPageView } from "./apiClient.js";
+import { getVisitorId } from "./visitorId.js";
+
+// Bezoek loggen voor de (beheer-only) statistiekenpagina — "fire and
+// forget": een mislukte of trage telling mag het laden van de pagina
+// zelf nooit ophouden of breken.
+logPageView({ path: "index", visitorId: getVisitorId() }).catch(() => {});
 
 const VOICE_LABELS = { S: "S", A: "A", T: "T", B: "B" };
 

@@ -28,6 +28,7 @@
       <div class="app-logo-text serif">Notenmap · beheer</div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;">
+      <button id="stats-nav-btn" class="back-link" style="background:none;border:none;cursor:pointer;font:inherit;" hidden>Statistieken</button>
       <button id="logout-btn" class="back-link" style="background:none;border:none;cursor:pointer;font:inherit;" hidden>Uitloggen</button>
       <a href="index.html" class="back-link">Naar het overzicht</a>
     </div>
@@ -157,6 +158,43 @@
       <h2 class="serif admin-heading" style="margin-top:36px;">Passages</h2>
       <div id="passage-list" class="passage-list">
         <p class="status">Nog geen passages.</p>
+      </div>
+    </section>
+
+    <section id="stats-view" hidden>
+      <div class="admin-toolbar">
+        <h1 class="serif admin-heading">Bezoekstatistieken</h1>
+        <button id="stats-back-btn" class="btn btn-secondary">← Terug naar stukken</button>
+      </div>
+      <p id="stats-status" class="status">Bezig met laden…</p>
+      <div id="stats-content" hidden>
+        <div class="stats-cards">
+          <div class="stats-card">
+            <div class="stats-card-value" id="stats-total-hits">0</div>
+            <div class="stats-card-label">bezoeken totaal</div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-value" id="stats-total-visitors">0</div>
+            <div class="stats-card-label">unieke bezoekers (geschat)</div>
+          </div>
+          <div class="stats-card">
+            <div class="stats-card-value" id="stats-last-7-days">0</div>
+            <div class="stats-card-label">bezoeken afgelopen 7 dagen</div>
+          </div>
+        </div>
+
+        <h2 class="serif admin-heading" style="margin-top:36px;">Per dag (laatste 14 dagen)</h2>
+        <div id="stats-by-day" class="stats-table"></div>
+
+        <h2 class="serif admin-heading" style="margin-top:36px;">Meest bekeken stukken</h2>
+        <div id="stats-by-piece" class="stats-table"></div>
+
+        <p class="status" style="margin-top:24px;">
+          "Unieke bezoekers" is een schatting op basis van een willekeurig,
+          anoniem ID dat elke browser zelf bewaart — geen naam, e-mail of
+          IP-adres. Iemand die zijn browsergegevens wist of op een ander
+          apparaat kijkt, telt opnieuw mee.
+        </p>
       </div>
     </section>
 

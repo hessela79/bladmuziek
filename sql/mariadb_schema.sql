@@ -72,3 +72,19 @@ CREATE TABLE IF NOT EXISTS passage_rects (
   sort_order INT NOT NULL DEFAULT 0,
   FOREIGN KEY (passage_id) REFERENCES passages (id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Eigen, minimale bezoekregistratie (zie README/DEPLOYMENT.md): één rij
+-- per paginabezoek, met een anoniem apparaat-ID (geen naam/e-mail/IP) dat
+-- de browser zelf in localStorage bewaart. Lezen vereist een ingelogde
+-- beheerder — schrijven (een bezoek loggen) is hier juist bewust WEL
+-- publiek, want dat doen gewone sitebezoekers, geen beheerders.
+CREATE TABLE IF NOT EXISTS page_views (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  path VARCHAR(20) NOT NULL,
+  piece_id VARCHAR(191),
+  visitor_id CHAR(36) NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (piece_id) REFERENCES pieces (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_page_views_created_at ON page_views (created_at);

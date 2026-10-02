@@ -68,12 +68,24 @@ create table if not exists passage_rects (
   sort_order int not null default 0
 );
 
+-- Eigen, minimale bezoekregistratie (zie README/DEPLOYMENT.md): één rij
+-- per paginabezoek, met een anoniem apparaat-ID (geen naam/e-mail/IP) dat
+-- de browser zelf in localStorage bewaart.
+create table if not exists page_views (
+  id uuid primary key default gen_random_uuid(),
+  path text not null,
+  piece_id text references pieces (id) on delete set null,
+  visitor_id uuid not null,
+  created_at timestamptz not null default now()
+);
+
 -- RLS aan, met (voorlopig) volledig open policies — zie opmerking
 -- bovenaan dit bestand.
 alter table assets enable row level security;
 alter table pieces enable row level security;
 alter table passages enable row level security;
 alter table passage_rects enable row level security;
+alter table page_views enable row level security;
 
 create policy "open select assets" on assets for select using (true);
 create policy "open insert assets" on assets for insert with check (true);
@@ -94,6 +106,9 @@ create policy "open select passage_rects" on passage_rects for select using (tru
 create policy "open insert passage_rects" on passage_rects for insert with check (true);
 create policy "open update passage_rects" on passage_rects for update using (true);
 create policy "open delete passage_rects" on passage_rects for delete using (true);
+
+create policy "open select page_views" on page_views for select using (true);
+create policy "open insert page_views" on page_views for insert with check (true);
 
 -- ---------- Storage: buckets voor de bestanden zelf ----------
 

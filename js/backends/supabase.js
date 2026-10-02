@@ -212,3 +212,16 @@ export async function logout() {
 export async function checkSession() {
   return { loggedIn: true };
 }
+
+// ---------- Bezoekregistratie ----------
+
+export async function logPageView({ path, pieceId, visitorId }) {
+  unwrap(await client.from("page_views").insert({ path, piece_id: pieceId ?? null, visitor_id: visitorId }));
+  return { ok: true };
+}
+
+export async function listPageViews() {
+  return unwrap(
+    await client.from("page_views").select("path, piece_id, visitor_id, created_at").order("created_at", { ascending: true })
+  );
+}

@@ -122,3 +122,16 @@ export function logout() {
 export function checkSession() {
   return apiFetch("session.php");
 }
+
+// ---------- Bezoekregistratie ----------
+
+export function logPageView({ path, pieceId, visitorId }) {
+  return apiFetch("track.php", {
+    method: "POST",
+    body: JSON.stringify({ path, piece_id: pieceId ?? null, visitor_id: visitorId }),
+  });
+}
+
+export function listPageViews() {
+  return apiFetch("track.php");
+}
