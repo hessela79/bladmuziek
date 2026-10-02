@@ -35,6 +35,13 @@ om even te checken.
 - `c25dc5a` — Zelfde opsplitsing, nu ook op de publieke overzichtspagina
   die koorleden zien (onder de stemgroep-chips per stuk). Puur een
   weergave-wijziging, geen database-wijziging.
+- `95c766f` — **Nieuwe functie + database-migratie**: eigen, minimale
+  bezoekstatistieken (hits + geschatte unieke bezoekers, per dag en per
+  stuk), te bekijken via een nieuwe "Statistieken"-link in het
+  beheerscherm. Vereist bij het live zetten: eerst
+  `sql/004_page_views.sql` op de productie-database draaien (voegt
+  alleen een nieuwe, lege tabel toe — raakt niets van de bestaande
+  data). Lokaal end-to-end getest met Playwright vóór deze commit.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
