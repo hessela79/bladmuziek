@@ -273,6 +273,27 @@ button {
   color: var(--gold);
 }
 
+.piece-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fffdf8;
+  box-shadow: var(--shadow-sm);
+  z-index: 1;
+}
+
+.piece-card-badge.new {
+  background: var(--gold);
+}
+
+.piece-card-badge.updated {
+  background: var(--color-groen);
+}
+
 /* ---------- Viewer header ---------- */
 
 .viewer-header {

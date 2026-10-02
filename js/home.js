@@ -1,10 +1,23 @@
 import { listPieces, listAllPassages, logPageView } from "./apiClient.js";
 import { getVisitorId } from "./visitorId.js";
+import { getLastVisitAndUpdate } from "./lastVisit.js";
 
 // Bezoek loggen voor de (beheer-only) statistiekenpagina — "fire and
 // forget": een mislukte of trage telling mag het laden van de pagina
 // zelf nooit ophouden of breken.
 logPageView({ path: "index", visitorId: getVisitorId() }).catch(() => {});
+
+// Vorig bezoekmoment van déze browser — bepaalt de "Nieuw"/"Bijgewerkt"-
+// labels hieronder. Bij een eerste bezoek (null) tonen we geen labels:
+// er is dan niets om "sinds" te vergelijken.
+const lastVisit = getLastVisitAndUpdate();
+
+// MariaDB geeft "2026-10-02 14:23:11" terug (spatie), Supabase
+// "2026-10-02T14:23:11.123+00:00" — new Date(...) parseert de eerste
+// vorm niet betrouwbaar in elke browser, dus altijd normaliseren.
+function toDate(value) {
+  return new Date(String(value).replace(" ", "T"));
+}
 
 const VOICE_LABELS = { S: "S", A: "A", T: "T", B: "B" };
 
@@ -26,11 +39,15 @@ function renderCard(piece) {
     .map((v) => `<div class="voice-chip ${v.toLowerCase()}">${VOICE_LABELS[v] || v}</div>`)
     .join("");
   const soloChip = piece.solo ? `<div class="voice-chip solo">Solo</div>` : "";
+  const badgeHtml = piece.badge
+    ? `<div class="piece-card-badge ${piece.badge}">${piece.badge === "new" ? "Nieuw" : "Bijgewerkt"}</div>`
+    : "";
 
   const a = document.createElement("a");
   a.href = `viewer.html?stuk=${encodeURIComponent(piece.id)}`;
   a.className = "piece-card";
   a.innerHTML = `
+    ${badgeHtml}
     <div class="piece-card-staff"></div>
     <div class="piece-card-body">
       <div>
@@ -56,9 +73,13 @@ async function main() {
 
     const passageCounts = new Map();
     const noteCounts = new Map();
+    const latestPassageByPiece = new Map();
     for (const p of passages) {
       const counts = p.audio_asset_id ? passageCounts : noteCounts;
       counts.set(p.piece_id, (counts.get(p.piece_id) || 0) + 1);
+
+      const t = toDate(p.created_at).getTime();
+      if (t > (latestPassageByPiece.get(p.piece_id) || 0)) latestPassageByPiece.set(p.piece_id, t);
     }
 
     grid.innerHTML = "";
@@ -67,11 +88,24 @@ async function main() {
       return;
     }
     for (const piece of pieces) {
+      // "Nieuw": het hele stuk is toegevoegd sinds je vorige bezoek.
+      // "Bijgewerkt": het stuk zelf niet, maar er is wél een passage of
+      // opmerking bij gekomen sinds je vorige bezoek. Bij een eerste
+      // bezoek (lastVisit null) laten we alles ongelabeld.
+      let badge = null;
+      if (lastVisit) {
+        const isNew = toDate(piece.created_at).getTime() > lastVisit.getTime();
+        const latestPassage = latestPassageByPiece.get(piece.id) || 0;
+        const isUpdated = !isNew && latestPassage > lastVisit.getTime();
+        badge = isNew ? "new" : isUpdated ? "updated" : null;
+      }
+
       grid.appendChild(
         renderCard({
           ...piece,
           passageCount: passageCounts.get(piece.id) || 0,
           noteCount: noteCounts.get(piece.id) || 0,
+          badge,
         })
       );
     }
