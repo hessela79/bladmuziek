@@ -45,6 +45,15 @@ om even te checken.
 - `72dc78b` — "Nieuw"/"Bijgewerkt"-label op het publieke overzicht, puur
   lokaal (localStorage, geen cookie, geen database-wijziging) op basis
   van het vorige bezoekmoment van die browser.
+- `9d55f3f` — **Verbetering + database-migratie**: het "Nieuw"/
+  "Bijgewerkt"-label blijft nu staan totdat je het stuk echt opent
+  (i.p.v. al bij het eerstvolgende overzicht-bezoek te verdwijnen), en
+  "Bijgewerkt" geldt nu ook als je een extra vak aan een bestaande
+  passage toevoegt. Vereist bij het live zetten: eerst
+  `sql/005_passage_updated_at.sql` op de productie-database draaien
+  (voegt een nieuwe kolom toe en vult die voor bestaande passages met
+  hun bestaande created_at, zodat er niets zichtbaar verandert). Lokaal
+  end-to-end getest met Playwright vóór deze commit.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
