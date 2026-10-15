@@ -53,6 +53,10 @@ CREATE TABLE IF NOT EXISTS passages (
   voices VARCHAR(32) NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  -- Expliciet door de API bijgewerkt bij elke wijziging (nieuw vak,
+  -- andere audio, ...) — bepaalt het "Bijgewerkt"-label op het publieke
+  -- overzicht, zie js/home.js.
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (piece_id) REFERENCES pieces (id) ON DELETE CASCADE,
   FOREIGN KEY (audio_asset_id) REFERENCES assets (id) ON DELETE SET NULL,
   CONSTRAINT passages_color_check CHECK (color IN ('geel', 'groen', 'rood', 'blauw', 'bruin', 'goud'))

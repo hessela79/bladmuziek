@@ -1,16 +1,11 @@
 import { listPieces, listAllPassages, logPageView } from "./apiClient.js";
 import { getVisitorId } from "./visitorId.js";
-import { getLastVisitAndUpdate } from "./lastVisit.js";
+import { getSeenMapOrBootstrap } from "./seenPieces.js";
 
 // Bezoek loggen voor de (beheer-only) statistiekenpagina — "fire and
 // forget": een mislukte of trage telling mag het laden van de pagina
 // zelf nooit ophouden of breken.
 logPageView({ path: "index", visitorId: getVisitorId() }).catch(() => {});
-
-// Vorig bezoekmoment van déze browser — bepaalt de "Nieuw"/"Bijgewerkt"-
-// labels hieronder. Bij een eerste bezoek (null) tonen we geen labels:
-// er is dan niets om "sinds" te vergelijken.
-const lastVisit = getLastVisitAndUpdate();
 
 // MariaDB geeft "2026-10-02 14:23:11" terug (spatie), Supabase
 // "2026-10-02T14:23:11.123+00:00" — new Date(...) parseert de eerste
@@ -78,7 +73,10 @@ async function main() {
       const counts = p.audio_asset_id ? passageCounts : noteCounts;
       counts.set(p.piece_id, (counts.get(p.piece_id) || 0) + 1);
 
-      const t = toDate(p.created_at).getTime();
+      // updated_at i.p.v. created_at: ook een extra vak of ander
+      // oefenfragment op een al bestaande passage moet "Bijgewerkt"
+      // opleveren, niet alleen een gloednieuwe passage.
+      const t = toDate(p.updated_at).getTime();
       if (t > (latestPassageByPiece.get(p.piece_id) || 0)) latestPassageByPiece.set(p.piece_id, t);
     }
 
@@ -87,17 +85,28 @@ async function main() {
       grid.innerHTML = `<p class="status">Nog geen stukken toegevoegd.</p>`;
       return;
     }
+
+    // Eerste keer dat dit op dit apparaat draait: al het huidige
+    // repertoire geldt dan als "al gezien" (justBootstrapped), zodat niet
+    // opeens alles als nieuw/bijgewerkt oplicht.
+    const { map: seenMap, justBootstrapped } = getSeenMapOrBootstrap(pieces.map((p) => p.id));
+
     for (const piece of pieces) {
-      // "Nieuw": het hele stuk is toegevoegd sinds je vorige bezoek.
-      // "Bijgewerkt": het stuk zelf niet, maar er is wél een passage of
-      // opmerking bij gekomen sinds je vorige bezoek. Bij een eerste
-      // bezoek (lastVisit null) laten we alles ongelabeld.
+      // "Nieuw": dit stuk is nog nooit door deze browser geopend (het
+      // bestond nog niet bij de bootstrap, of is sindsdien toegevoegd).
+      // "Bijgewerkt": wel al eens geopend, maar het stuk of een van zijn
+      // passages is sindsdien gewijzigd. Het label blijft staan over
+      // meerdere bezoeken aan dit overzicht — pas het echt openen van het
+      // stuk (zie viewer.js) telt als "gezien".
       let badge = null;
-      if (lastVisit) {
-        const isNew = toDate(piece.created_at).getTime() > lastVisit.getTime();
-        const latestPassage = latestPassageByPiece.get(piece.id) || 0;
-        const isUpdated = !isNew && latestPassage > lastVisit.getTime();
-        badge = isNew ? "new" : isUpdated ? "updated" : null;
+      if (!justBootstrapped) {
+        const seenAt = seenMap[piece.id] ? toDate(seenMap[piece.id]).getTime() : null;
+        if (seenAt === null) {
+          badge = "new";
+        } else {
+          const lastChanged = Math.max(toDate(piece.created_at).getTime(), latestPassageByPiece.get(piece.id) || 0);
+          if (lastChanged > seenAt) badge = "updated";
+        }
       }
 
       grid.appendChild(

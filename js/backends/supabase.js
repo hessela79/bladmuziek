@@ -150,6 +150,10 @@ export async function insertPassage(row) {
 
 export async function updatePassage(id, row) {
   const { rects, ...passageFields } = row;
+  // Expliciet bijwerken (geen automatische "on update" in Postgres zoals
+  // MariaDB dat kent) — bepaalt het "Bijgewerkt"-label op het publieke
+  // overzicht, zie js/home.js.
+  passageFields.updated_at = new Date().toISOString();
   unwrap(await client.from("passages").update(passageFields).eq("id", id));
   await replaceRects(id, rects || []);
   return { ok: true };

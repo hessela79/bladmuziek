@@ -2,6 +2,7 @@ import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
 import { getPiece, listPassages, PDF_BUCKET, AUDIO_BUCKET, publicUrlFor, logPageView } from "./apiClient.js";
 import { exportStandaloneHtml } from "./export.js";
 import { getVisitorId } from "./visitorId.js";
+import { markPieceSeen } from "./seenPieces.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "./vendor/pdfjs/pdf.worker.min.mjs",
@@ -261,6 +262,10 @@ async function main() {
   // Bezoek loggen voor de (beheer-only) statistiekenpagina — "fire and
   // forget", zie js/home.js.
   logPageView({ path: "viewer", pieceId, visitorId: getVisitorId() }).catch(() => {});
+
+  // Dit stuk is nu écht geopend (niet alleen gezien in het overzicht) —
+  // haalt een eventueel "Nieuw"/"Bijgewerkt"-label daar weg.
+  markPieceSeen(pieceId);
 
   try {
     let piece;

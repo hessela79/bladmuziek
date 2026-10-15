@@ -51,7 +51,11 @@ create table if not exists passages (
   -- niet-verwijderde passages), zie pieces.voices hierboven.
   voices text[] not null default '{}',
   sort_order int not null default 0,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Expliciet door de app bijgewerkt bij elke wijziging (nieuw vak,
+  -- andere audio, ...) — bepaalt het "Bijgewerkt"-label op het publieke
+  -- overzicht, zie js/home.js.
+  updated_at timestamptz not null default now()
 );
 
 -- Eén passage kan uit meerdere rechthoeken bestaan (bijv. een passage die

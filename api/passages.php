@@ -15,6 +15,7 @@ function passage_out(array $row, array $rects): array
         'voices' => $row['voices'] === '' || $row['voices'] === null ? [] : explode(',', $row['voices']),
         'sort_order' => (int) $row['sort_order'],
         'created_at' => $row['created_at'],
+        'updated_at' => $row['updated_at'],
         'rects' => array_map(function (array $r): array {
             return [
                 'page' => (int) $r['page'],
@@ -161,7 +162,7 @@ if ($method === 'PUT') {
     try {
         $stmt = $pdo->prepare(
             'UPDATE passages SET title = :title, description = :description, audio_asset_id = :audio_asset_id,
-             color = :color, voices = :voices, sort_order = :sort_order
+             color = :color, voices = :voices, sort_order = :sort_order, updated_at = NOW()
              WHERE id = :id'
         );
         $stmt->execute([
