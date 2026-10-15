@@ -1,4 +1,5 @@
 import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
+import { PDFDocument } from "./vendor/pdf-lib/pdf-lib.esm.min.js";
 import {
   PDF_BUCKET,
   AUDIO_BUCKET,
@@ -72,6 +73,10 @@ const pdfPrev = document.getElementById("pdf-prev");
 const pdfNext = document.getElementById("pdf-next");
 const pdfPageIndicator = document.getElementById("pdf-page-indicator");
 const pdfContainer = document.getElementById("admin-pdf-container");
+const pdfReplacePageBtn = document.getElementById("pdf-replace-page-btn");
+const pdfInsertPageBtn = document.getElementById("pdf-insert-page-btn");
+const pdfReplaceUpload = document.getElementById("pdf-replace-upload");
+const pdfInsertUpload = document.getElementById("pdf-insert-upload");
 const addPassageBtn = document.getElementById("add-passage-btn");
 const drawHint = document.getElementById("draw-hint");
 const drawMoreBanner = document.getElementById("draw-more-banner");
@@ -650,12 +655,14 @@ async function loadStats() {
 
 // ---------- PDF preview + page rendering ----------
 
-async function loadPdfPreview(urlOrData) {
+async function loadPdfPreview(urlOrData, { page = 1 } = {}) {
   const loadingTask =
     typeof urlOrData === "string" ? pdfjsLib.getDocument(urlOrData) : pdfjsLib.getDocument({ data: urlOrData });
   state.pdfDoc = await loadingTask.promise;
-  state.currentPage = 1;
-  pdfNav.hidden = state.pdfDoc.numPages <= 1;
+  state.currentPage = Math.min(Math.max(1, page), state.pdfDoc.numPages);
+  // Altijd tonen zodra er een PDF geladen is — ook bij één pagina, want de
+  // vervang-/invoegknoppen in deze balk moeten dan ook bereikbaar zijn.
+  pdfNav.hidden = false;
   addPassageBtn.hidden = false;
   await renderCurrentPage();
 }
@@ -788,6 +795,147 @@ fPdfUpload.addEventListener("change", async () => {
   state.pdfFile = file;
   const buffer = await file.arrayBuffer();
   await loadPdfPreview(new Uint8Array(buffer));
+});
+
+// ---------- Eén pagina vervangen of invoegen ----------
+// Een PDF kan niet "in place" op één pagina gepatcht worden — bij beide
+// acties wordt het hele bestand opnieuw opgebouwd (met pdf-lib) en als
+// nieuw bestand geüpload zodra op "Bewaren" wordt geklikt (hetzelfde pad
+// als een gewone PDF-vervanging via het bovenste upload-veld). Het oude
+// PDF-bestand blijft gewoon in de bibliotheek staan.
+
+function isPdfFile(file) {
+  return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+}
+
+async function embedImageInDoc(doc, file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const isPng = file.type === "image/png" || /\.png$/i.test(file.name);
+  return isPng ? doc.embedPng(bytes) : doc.embedJpg(bytes);
+}
+
+function drawImageContained(page, image, pageWidth, pageHeight) {
+  const scale = Math.min(pageWidth / image.width, pageHeight / image.height);
+  const width = image.width * scale;
+  const height = image.height * scale;
+  page.drawImage(image, { x: (pageWidth - width) / 2, y: (pageHeight - height) / 2, width, height });
+}
+
+async function getCurrentPdfBytes() {
+  if (state.pdfFile) return new Uint8Array(await state.pdfFile.arrayBuffer());
+  if (state.pdfAssetId) {
+    const asset = pdfAssets.find((a) => a.id === state.pdfAssetId);
+    if (!asset) throw new Error("Het huidige PDF-bestand is niet gevonden in de bibliotheek.");
+    const res = await fetch(publicUrlFor(PDF_BUCKET, asset.storage_path));
+    if (!res.ok) throw new Error("Kon de huidige PDF niet laden.");
+    return new Uint8Array(await res.arrayBuffer());
+  }
+  throw new Error("Er is nog geen PDF geladen.");
+}
+
+// targetIndex is 0-based: bij "replace" de te vervangen pagina, bij
+// "insert" de positie waar de nieuwe pagina komt (de pagina die daar nu
+// staat, en alles erna, schuift daarmee automatisch één op).
+async function rebuildPdfWithPage({ file, targetIndex, mode }) {
+  const currentBytes = await getCurrentPdfBytes();
+  const doc = await PDFDocument.load(currentBytes);
+  const { width, height } = doc.getPage(targetIndex).getSize();
+
+  // copyPages moet gebeuren vóór we iets aan `doc` zelf wijzigen.
+  let preparedPage = null;
+  let image = null;
+  if (isPdfFile(file)) {
+    const sourceDoc = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()));
+    [preparedPage] = await doc.copyPages(sourceDoc, [0]);
+  } else {
+    image = await embedImageInDoc(doc, file);
+  }
+
+  if (mode === "replace") doc.removePage(targetIndex);
+
+  if (preparedPage) {
+    doc.insertPage(targetIndex, preparedPage);
+  } else {
+    const newPage = doc.insertPage(targetIndex, [width, height]);
+    drawImageContained(newPage, image, width, height);
+  }
+
+  return doc.save();
+}
+
+async function applyRebuiltPdf(bytes, pageToShow) {
+  // Altijd een unieke bestandsnaam — anders botsen een "vervangen" en een
+  // "invoegen" in dezelfde bewerksessie (of twee losse bewerksessies) op
+  // hetzelfde opslagpad en overschrijft de tweede upload de eerste op de
+  // server, terwijl de bibliotheek nog twee aparte asset-rijen toont.
+  const filename = `bladmuziek-${Date.now()}.pdf`;
+  state.pdfFile = new File([bytes], filename, { type: "application/pdf" });
+  state.pdfAssetId = null;
+  await loadPdfPreview(bytes, { page: pageToShow });
+}
+
+// Alle vakken op of na de net verschoven pagina (van álle passages, ook
+// die van een andere pagina van dezelfde meervakkige passage) schuiven
+// mee één pagina op.
+function shiftRectsFromPage(fromPage) {
+  for (const passage of state.passages) {
+    if (passage.deleted) continue;
+    for (const rect of passage.rects) {
+      if (rect.page >= fromPage) rect.page += 1;
+    }
+  }
+}
+
+pdfReplacePageBtn.addEventListener("click", () => {
+  pdfReplaceUpload.value = "";
+  pdfReplaceUpload.click();
+});
+pdfInsertPageBtn.addEventListener("click", () => {
+  pdfInsertUpload.value = "";
+  pdfInsertUpload.click();
+});
+
+pdfReplaceUpload.addEventListener("change", async () => {
+  const file = pdfReplaceUpload.files[0];
+  if (!file) return;
+  if (!confirm(`Pagina ${state.currentPage} vervangen door dit bestand? De huidige inhoud van deze pagina gaat dan verloren.`)) {
+    pdfReplaceUpload.value = "";
+    return;
+  }
+  editorStatus.hidden = false;
+  editorStatus.textContent = "Pagina vervangen…";
+  try {
+    const targetIndex = state.currentPage - 1;
+    const bytes = await rebuildPdfWithPage({ file, targetIndex, mode: "replace" });
+    await applyRebuiltPdf(bytes, state.currentPage);
+  } catch (err) {
+    console.error(err);
+    alert("Pagina vervangen is mislukt: " + err.message);
+  } finally {
+    editorStatus.hidden = true;
+    pdfReplaceUpload.value = "";
+  }
+});
+
+pdfInsertUpload.addEventListener("change", async () => {
+  const file = pdfInsertUpload.files[0];
+  if (!file) return;
+  editorStatus.hidden = false;
+  editorStatus.textContent = "Pagina invoegen…";
+  try {
+    const insertedAt = state.currentPage;
+    const targetIndex = insertedAt - 1;
+    const bytes = await rebuildPdfWithPage({ file, targetIndex, mode: "insert" });
+    shiftRectsFromPage(insertedAt);
+    await applyRebuiltPdf(bytes, insertedAt);
+    renderPassageList();
+  } catch (err) {
+    console.error(err);
+    alert("Pagina invoegen is mislukt: " + err.message);
+  } finally {
+    editorStatus.hidden = true;
+    pdfInsertUpload.value = "";
+  }
 });
 
 // ---------- Drawing new passage rectangles ----------

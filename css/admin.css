@@ -600,10 +600,16 @@
 .pdf-nav {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   margin-bottom: 12px;
   font-size: 0.82rem;
   color: var(--ink-muted);
+}
+
+.btn-icon-page {
+  padding: 6px 9px;
+  line-height: 0;
 }
 
 .draw-hint {
