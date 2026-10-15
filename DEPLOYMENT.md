@@ -54,6 +54,17 @@ om even te checken.
   (voegt een nieuwe kolom toe en vult die voor bestaande passages met
   hun bestaande created_at, zodat er niets zichtbaar verandert). Lokaal
   end-to-end getest met Playwright vóór deze commit.
+- `4435047` — **Nieuwe functie**: bij het bewerken van de PDF van een
+  stuk kun je nu de actieve pagina vervangen of er een nieuwe pagina
+  (PDF of foto/afbeelding) vóór invoegen, via twee nieuwe knopjes bij de
+  (nu gecentreerde) vorige/volgende-paginanavigatie. Het hele PDF-bestand
+  wordt dan opnieuw opgebouwd en als nieuw bestand opgeslagen zodra je op
+  "Bewaren" klikt; het oude PDF-bestand blijft gewoon in de bibliotheek
+  staan. Bij invoegen schuiven de paginanummers van bestaande vakken
+  automatisch mee op. Geen database-wijziging. Gebruikt een nieuw,
+  lokaal meegeleverd bestand (`js/vendor/pdf-lib/`, geen externe
+  dienst). Lokaal end-to-end getest met Playwright (alle vier de
+  combinaties: PDF/afbeelding × vervangen/invoegen) vóór deze commit.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
