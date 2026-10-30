@@ -1,40 +1,34 @@
-// Simpel wachtwoordschermpje vóór de hele testomgeving (GitHub Pages/
-// Supabase-backend) — puur om te voorkomen dat iemand er per ongeluk op
-// uitkomt terwijl er getest wordt. Dit is GEEN echte beveiliging (een
+// Simpel wachtwoordschermpje vóór de hele site (overzicht, bladmuziek-
+// weergave én beheer) — elke bezoeker, overal (ook op het echte
+// productiedomein en bij lokaal draaien), moet dit wachtwoord invoeren
+// voordat de pagina zichtbaar wordt. Dit is GEEN echte beveiliging (een
 // statische site kan zich niet écht afschermen; iemand die de broncode
-// leest komt er sowieso doorheen) — op het productiedomein en bij lokaal
-// draaien staat deze popup daarom bewust nooit aan.
+// leest komt er sowieso doorheen) — het voorkomt alleen dat de bladmuziek
+// zomaar voor iedereen die de link heeft toegankelijk is.
 //
-// Gewone (niet-module) <script>, geplaatst vóór alles in <head> samen
-// met js/prodHosts.js, zodat de pagina synchroon verborgen kan blijven
-// (via html{visibility:hidden} in de HTML zelf) totdat hier beslist is
-// of dat nodig is.
+// Dit is losstaand van de beheerinlog in admin.html (die geeft
+// schrijftoegang via een echte, server-geverifieerde sessie) — dit
+// schermpje is er puur om te bekijken.
+//
+// Gewone (niet-module) <script>, geplaatst vóór alles in <head>, zodat de
+// pagina synchroon verborgen kan blijven (via html{visibility:hidden} in
+// de HTML zelf) totdat hier beslist is of het wachtwoord al bekend is.
 (function () {
   var root = document.documentElement;
-  var hostname = location.hostname;
-  var productionHosts = window.NOTENMAP_PRODUCTION_HOSTS || [];
-  var localHosts = ["localhost", "127.0.0.1", "::1", ""];
 
   function reveal() {
     root.style.visibility = "visible";
   }
 
-  // Productie en lokaal draaien (development op je eigen machine) slaan
-  // de popup altijd over.
-  if (productionHosts.indexOf(hostname) !== -1 || localHosts.indexOf(hostname) !== -1) {
-    reveal();
-    return;
-  }
-
-  var STORAGE_KEY = "notenmap-dev-gate-ok";
+  var STORAGE_KEY = "notenmap-visitor-gate-ok";
   if (localStorage.getItem(STORAGE_KEY) === "1") {
     reveal();
     return;
   }
 
-  // sha256("Bladmuziek") — een hash i.p.v. platte tekst zodat het
-  // wachtwoord niet letterlijk in de paginabron te lezen is.
-  var PASSWORD_HASH = "93f5a2d19c62dcd1a21ebef969f6660efc28440561e9f3fbd9db2f66f6425bb4";
+  // sha256("k00r") — een hash i.p.v. platte tekst zodat het wachtwoord
+  // niet letterlijk in de paginabron te lezen is.
+  var PASSWORD_HASH = "e9ceb0746b25e34e7d1d64b523369b83dcd89f1587751a6d2434e4c7cf29a7e0";
 
   function sha256Hex(text) {
     var data = new TextEncoder().encode(text);
@@ -49,7 +43,7 @@
 
   function showGate() {
     var overlay = document.createElement("div");
-    overlay.id = "dev-gate-overlay";
+    overlay.id = "visitor-gate-overlay";
     overlay.style.cssText = [
       "position:fixed",
       "inset:0",
@@ -63,18 +57,18 @@
     ].join(";");
 
     overlay.innerHTML =
-      '<form id="dev-gate-form" style="' +
+      '<form id="visitor-gate-form" style="' +
       "background:#2a2118;color:#f3e9d8;padding:32px;border-radius:14px;" +
       "width:100%;max-width:320px;box-shadow:0 20px 50px rgba(0,0,0,0.5);" +
       'display:flex;flex-direction:column;gap:14px;text-align:center;">' +
-      '<div style="font-size:1.1rem;font-weight:600;">Testomgeving</div>' +
+      '<div style="font-size:1.1rem;font-weight:600;">Notenmap</div>' +
       '<p style="margin:0;font-size:0.85rem;color:#b8a488;line-height:1.4;">' +
-      "Deze omgeving is alleen voor intern testen. Voer het wachtwoord in." +
+      "Voer het wachtwoord in om de bladmuziek te bekijken." +
       "</p>" +
-      '<input id="dev-gate-password" type="password" autocomplete="off" autocapitalize="off" ' +
+      '<input id="visitor-gate-password" type="password" autocomplete="off" autocapitalize="off" ' +
       'style="font:inherit;font-size:0.95rem;padding:10px 12px;border-radius:8px;' +
       'border:1.5px solid rgba(243,233,216,0.25);background:#1c1712;color:#f3e9d8;" />' +
-      '<p id="dev-gate-error" style="display:none;margin:0;color:#d4685a;font-size:0.8rem;">' +
+      '<p id="visitor-gate-error" style="display:none;margin:0;color:#d4685a;font-size:0.8rem;">' +
       "Onjuist wachtwoord." +
       "</p>" +
       '<button type="submit" style="font:inherit;font-weight:600;padding:10px 16px;' +
@@ -87,11 +81,11 @@
     // totdat het juiste wachtwoord is ingevoerd.
     reveal();
 
-    var input = document.getElementById("dev-gate-password");
-    var error = document.getElementById("dev-gate-error");
+    var input = document.getElementById("visitor-gate-password");
+    var error = document.getElementById("visitor-gate-error");
     input.focus();
 
-    document.getElementById("dev-gate-form").addEventListener("submit", function (e) {
+    document.getElementById("visitor-gate-form").addEventListener("submit", function (e) {
       e.preventDefault();
       if (!window.crypto || !window.crypto.subtle) {
         error.textContent = "Dit werkt alleen via https (of localhost).";

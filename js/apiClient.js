@@ -3,7 +3,7 @@
 // importeren allemaal alleen van dit bestand, en weten niet welke
 // backend er onder zit).
 //
-// - Productiedomein(en) (zie js/prodHosts.js, gedeeld met js/devGate.js)
+// - Productiedomein(en) (zie js/prodHosts.js)
 //   -> js/backends/mariadb.js (de eigen PHP-API op MariaDB, met een echt
 //   inlogscherm voor beheer).
 // - Alle andere hostnamen (GitHub Pages, localhost, een preview-domein, …)

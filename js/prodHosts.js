@@ -1,5 +1,5 @@
-// Eén plek voor het productiedomein, gedeeld door js/apiClient.js (welke
-// backend te gebruiken) en js/devGate.js (of de testomgeving-popup moet
-// verschijnen). Gewone (niet-module) <script>, zodat devGate.js dit
-// synchroon en vóór alle andere scripts kan lezen.
+// Eén plek voor het productiedomein, gebruikt door js/apiClient.js om de
+// juiste backend te kiezen (PHP + MariaDB op productie, Supabase overal
+// elders). Gewone (niet-module) <script>, zodat dit synchroon en vóór
+// alle andere scripts gelezen kan worden.
 window.NOTENMAP_PRODUCTION_HOSTS = ["hjk.hartvolmuziek.nl"];
