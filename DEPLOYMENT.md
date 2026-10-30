@@ -65,6 +65,20 @@ om even te checken.
   lokaal meegeleverd bestand (`js/vendor/pdf-lib/`, geen externe
   dienst). Lokaal end-to-end getest met Playwright (alle vier de
   combinaties: PDF/afbeelding × vervangen/invoegen) vóór deze commit.
+- `c4867b2` — **Let op, gedragswijziging bij live zetten**: de
+  wachtwoordpopup die eerder alleen op de test-/GitHub Pages-omgeving
+  verscheen, verschijnt nu overal — dus ook op de echte site. **Zodra
+  dit live staat, moet elke bezoeker (ook koorleden op het gewone
+  overzicht) eerst het wachtwoord `k00r` invoeren voordat ze iets te
+  zien krijgen.** Dat wachtwoord moet dus vooraf gedeeld worden met
+  iedereen die de site gebruikt. Het wordt wel per browser onthouden
+  (net als voorheen) — iemand hoeft het maar één keer per
+  apparaat/browser in te voeren. Het bestand `js/devGate.js` is
+  hernoemd naar `js/visitorGate.js` (bij het uploaden dus niet
+  vergeten: `devGate.js` mag van de server af, `visitorGate.js` moet
+  erbij). Dit is losstaand van de bestaande beheerinlog, die
+  ongewijzigd blijft. Geen database-wijziging. Lokaal end-to-end
+  getest met Playwright vóór deze commit.
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
