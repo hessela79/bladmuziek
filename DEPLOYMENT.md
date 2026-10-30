@@ -79,6 +79,17 @@ om even te checken.
   erbij). Dit is losstaand van de bestaande beheerinlog, die
   ongewijzigd blijft. Geen database-wijziging. Lokaal end-to-end
   getest met Playwright vóór deze commit.
+- `874fd85` — **Bugfix** (reden dat "Bijgewerkt" op productie niet
+  verscheen na de vorige live-release): MariaDB geeft tijden terug
+  zonder tijdzone-aanduiding, en de browser interpreteerde die dan als
+  lokale tijd in plaats van de tijd van de server — klopte dat niet met
+  elkaar (zeer waarschijnlijk het geval op productie), dan kon een net
+  gewijzigde passage onterecht lijken op "ouder dan je laatste bezoek",
+  waardoor het label wegbleef. Raakt alleen de 6 bestanden in `api/`
+  (`db.php`, `passages.php`, `pieces.php`, `assets.php`, `upload.php`,
+  `track.php`) — geen HTML/CSS/JS-bestand, geen database-wijziging.
+  Lokaal gereproduceerd en bevestigd opgelost met Playwright (bezoeker
+  op Europe/Amsterdam, server op UTC).
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
