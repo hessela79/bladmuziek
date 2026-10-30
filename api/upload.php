@@ -72,5 +72,5 @@ respond([
     'storage_path' => $row['storage_path'],
     'mime_type' => $row['mime_type'],
     'size_bytes' => (int) $row['size_bytes'],
-    'created_at' => $row['created_at'],
+    'created_at' => utc_iso($row['created_at']),
 ], 201);

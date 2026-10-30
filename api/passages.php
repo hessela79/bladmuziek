@@ -14,8 +14,8 @@ function passage_out(array $row, array $rects): array
         'color' => $row['color'],
         'voices' => $row['voices'] === '' || $row['voices'] === null ? [] : explode(',', $row['voices']),
         'sort_order' => (int) $row['sort_order'],
-        'created_at' => $row['created_at'],
-        'updated_at' => $row['updated_at'],
+        'created_at' => utc_iso($row['created_at']),
+        'updated_at' => utc_iso($row['updated_at']),
         'rects' => array_map(function (array $r): array {
             return [
                 'page' => (int) $r['page'],

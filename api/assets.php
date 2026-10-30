@@ -11,7 +11,7 @@ function asset_out(array $row): array
         'storage_path' => $row['storage_path'],
         'mime_type' => $row['mime_type'],
         'size_bytes' => $row['size_bytes'] !== null ? (int) $row['size_bytes'] : null,
-        'created_at' => $row['created_at'],
+        'created_at' => utc_iso($row['created_at']),
     ];
 }
 

@@ -46,7 +46,11 @@ if ($method === 'POST') {
 if ($method === 'GET') {
     require_admin();
     $stmt = $pdo->query('SELECT path, piece_id, visitor_id, created_at FROM page_views ORDER BY created_at ASC');
-    respond($stmt->fetchAll());
+    $rows = array_map(function (array $row): array {
+        $row['created_at'] = utc_iso($row['created_at']);
+        return $row;
+    }, $stmt->fetchAll());
+    respond($rows);
 }
 
 fail('Methode niet toegestaan.', 405);

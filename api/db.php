@@ -20,6 +20,13 @@ function db(): PDO
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
+            // Zonder dit hangt NOW()/CURRENT_TIMESTAMP af van de tijdzone
+            // die op de server toevallig is ingesteld (niet gegarandeerd
+            // UTC) — en DATETIME-kolommen bewaren zelf geen tijdzone. De
+            // frontend (zie utc_iso() hieronder en toDate() in js/*.js)
+            // gaat ervan uit dat elke *_at-waarde UTC is, dus dat moet
+            // hier afgedwongen worden.
+            $pdo->exec("SET time_zone = '+00:00'");
         } catch (PDOException $e) {
             http_response_code(500);
             header('Content-Type: application/json; charset=utf-8');
@@ -28,6 +35,21 @@ function db(): PDO
         }
     }
     return $pdo;
+}
+
+// Een DATETIME-waarde (bijv. "2026-10-30 11:20:36") komt zonder tijdzone
+// terug uit MariaDB. Dankzij SET time_zone hierboven is die waarde altijd
+// UTC — maar dat moet expliciet meegegeven worden, anders interpreteert de
+// browser 'm (new Date("...") zonder "Z") als lokale tijd. Bij een
+// server/bezoeker in een andere tijdzone kan dat ertoe leiden dat een net
+// gewijzigde passage lijkt op "eerder dan je laatste bezoek", waardoor een
+// "Bijgewerkt"-label ten onrechte wegblijft.
+function utc_iso(?string $datetime): ?string
+{
+    if ($datetime === null) {
+        return null;
+    }
+    return str_replace(' ', 'T', $datetime) . 'Z';
 }
 
 function config(): array

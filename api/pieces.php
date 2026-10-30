@@ -14,7 +14,7 @@ function piece_out(array $row): array
         'visible' => (bool) $row['visible'],
         'pdf_asset_id' => $row['pdf_asset_id'],
         'sort_order' => (int) $row['sort_order'],
-        'created_at' => $row['created_at'],
+        'created_at' => utc_iso($row['created_at']),
     ];
 }
 
