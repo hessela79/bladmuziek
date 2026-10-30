@@ -11,13 +11,18 @@ om even te checken.
 - **URL**: https://hjk.hartvolmuziek.nl/
 - **Backend**: PHP + MariaDB (`js/backends/mariadb.js`, `api/*.php`)
 - **Laatst bevestigd live gezet (door jou, handmatig geüpload)**:
-  commit `aa3da90` — inclusief dual-backend switch, tablet-tekenfix,
-  wachtwoordpopup test-/GitHub Pages-omgeving, meerdere vakken per
-  passage (+ database-migratie `sql/002_passage_rects.sql`, door jou
-  gedraaid) en de hidden-knoppen-bugfix (2026-09-29, bevestigd door jou
-  op 2026-09-29)
+  commit `a4fc768` (bevestigd door jou op 2026-10-30) — alles
+  hieronder bij "Sinds `aa3da90`" staat nu live en getest bevestigd,
+  inclusief de migraties `sql/003_passage_voices.sql`,
+  `sql/004_page_views.sql` en `sql/005_passage_updated_at.sql`.
+  **Let op voor volgende keer**: bij deze release werd `js/home.js`
+  aanvankelijk vergeten in de uploadlijst — dat gaf een reeks
+  verwarrende symptomen (zie de `874fd85`-regel hieronder) totdat het
+  alsnog apart geüpload werd. Dubbel-check voortaan de volledige
+  bestandenlijst tegen `git diff --name-status <vorige-commit>..main`
+  in plaats van een lijst uit het geheugen samen te stellen.
 
-## Nog niet live (wél al in git op `main`)
+### Sinds `aa3da90` (ter referentie, nu dus live)
 
 - `2e66fbe` — **Nieuwe functie + database-migratie**: de stemgroepen van
   een stuk worden niet meer los ingesteld, maar automatisch bepaald uit
@@ -89,7 +94,13 @@ om even te checken.
   (`db.php`, `passages.php`, `pieces.php`, `assets.php`, `upload.php`,
   `track.php`) — geen HTML/CSS/JS-bestand, geen database-wijziging.
   Lokaal gereproduceerd en bevestigd opgelost met Playwright (bezoeker
-  op Europe/Amsterdam, server op UTC).
+  op Europe/Amsterdam, server op UTC). Bevestigd werkend op productie
+  op 2026-10-30, nadat ook het gemiste `js/home.js` alsnog was
+  geüpload.
+
+## Nog niet live (wél al in git op `main`)
+
+_Niets op dit moment._
 
 _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
@@ -97,7 +108,11 @@ _Nieuwe wijzigingen komen hieronder bij te staan zodra ze gepusht worden._
 
 1. Bestanden uploaden (FTP/bestandsbeheer): alle gewijzigde bestanden
    sinds de laatste live-commit, **behalve** `api/config.php` (die staat
-   al op de server en mag niet overschreven worden door de sample).
+   al op de server en mag niet overschreven worden door de sample). De
+   bestandenlijst wordt altijd opnieuw afgeleid met
+   `git diff --name-status <laatste-live-commit>..main`, nooit uit het
+   geheugen samengesteld (zie de noot bij `a4fc768` hierboven — dat ging
+   hier eerder mis).
 2. Als er database-schema-wijzigingen bij zitten (nieuwe kolom, nieuwe
    tabel): het bijbehorende SQL-migratiescript in `sql/` op de
    MariaDB-database draaien.
